@@ -69,3 +69,31 @@ database/schema.sql
 
 # 2. 기초 데이터 적재 (Seed Data - 정책 및 지역 코드)
 database/seed.sql
+
+# 3. Backend (FastAPI)
+cd backend
+python -m venv venv
+source venv/bin/activate  # (Windows: venv\Scripts\activate)
+pip install -r requirements.txt
+
+# .env 파일 설정 (DB 정보 및 API Key) 후 실행
+uvicorn main:app --reload
+
+# 4. Frontend (React)
+cd frontend
+npm install
+npm run dev
+
+# 📂 Project Structure
+housing-policy-recommendation/
+├── backend/            # FastAPI Application
+│   ├── main.py         # Entry Point
+│   ├── models.py       # Pydantic Models
+│   └── routers/        # API Routers
+├── frontend/           # React Application
+│   ├── src/
+│   └── public/
+├── database/           # DB Scripts
+│   ├── schema.sql      # DDL (Create Tables)
+│   └── seed.sql        # DML (Insert Initial Data)
+└── assets/             # Project Images (ERD)
