@@ -11,7 +11,7 @@
 단순한 정책 나열이 아니라, 실시간 아파트 가격 변동성을 고려하여 사용자가 **'내가 살고 싶은 집'**을 선택했을 때 지원받을 수 있는 정책만을 필터링하여 제공합니다.
 
 > **개발 기간:** 2025.12 ~ 현재 (진행 중)
-> **팀 구성:** Full Stack (개인 프로젝트 / 혹은 팀원 수 기재)
+> **팀 구성:** Full Stack (2명)
 
 <br/>
 
@@ -97,3 +97,4 @@ housing-policy-recommendation/
 │   ├── schema.sql      # DDL (Create Tables)
 │   └── seed.sql        # DML (Insert Initial Data)
 └── assets/             # Project Images (ERD)
+```
