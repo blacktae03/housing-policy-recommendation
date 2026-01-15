@@ -395,3 +395,50 @@ def get_my_favorite_ids(user_id):
     finally:
         cursor.close()
         conn.close()
+
+
+def get_or_create_social_user(username, nickname, social_id, provider):
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    
+    try:
+        # 1. 이미 가입된 소셜 유저인지 확인
+        cursor.execute("""
+            SELECT u.user_id, u.nickname, u.username,
+                   (ui.info_id IS NOT NULL) as has_info 
+            FROM users u
+            LEFT JOIN user_info ui ON u.user_id = ui.user_id
+            WHERE u.username = %s AND u.provider = %s
+        """, (username, provider))
+        
+        existing_user = cursor.fetchone()
+        
+        if existing_user:
+            # 2. 이미 있으면 그 정보 리턴 (로그인)
+            return existing_user
+        else:
+            # 3. 없으면 새로 생성 (회원가입)
+            # 소셜 로그인은 비밀번호가 없으므로 NULL로 저장
+            cursor.execute("""
+                INSERT INTO users (username, nickname, provider, social_id, password)
+                VALUES (%s, %s, %s, %s, NULL)
+                RETURNING user_id
+            """, (username, nickname, provider, social_id))
+            
+            new_user_id = cursor.fetchone()['user_id']
+            conn.commit()
+            
+            # 새로 가입했으니 has_info는 당연히 False
+            return {
+                'user_id': new_user_id,
+                'nickname': nickname,
+                'has_info': False
+            }
+            
+    except Exception as e:
+        print(f"소셜 로그인 DB 처리 중 에러: {e}")
+        conn.rollback()
+        return None
+    finally:
+        cursor.close()
+        conn.close()

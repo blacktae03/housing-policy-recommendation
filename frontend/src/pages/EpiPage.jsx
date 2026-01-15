@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
+import logoNoFontImg from "@/assets/logoNoFont.png";
 
 const EpiPage = () => {
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ const EpiPage = () => {
       {/* 상단 로고 (위치 고정) */}
       <header className="absolute top-0 w-full pt-16 flex justify-center z-10">
         <div className="p-8 rounded-full bg-white/50 backdrop-blur-sm shadow-lg border border-theme-venus/20">
-            <Home className="w-24 h-24 text-theme-livid" />
+            <img src={logoNoFontImg} alt="집살때 로고" className="h-24 w-auto object-contain" />
         </div>
       </header>
 

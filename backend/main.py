@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, Request, Depends
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from requests import Session
 from starlette.middleware.sessions import SessionMiddleware # 세션 관리 도구
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,13 +9,19 @@ from datetime import date
 import openapi as oa
 from collections import defaultdict # 상단에 import 필요
 import numpy as np
+import secrets # 파이썬 내장 라이브러리 (랜덤 문자열 생성용)
+import httpx
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 app = FastAPI()
 
 origins = [
     "http://localhost:5173", # Vite 기본 포트
     "http://127.0.0.1:5173", # 혹시 IP로 들어올 경우 대비
+    "http://172.21.68.186:5173"
 ]
 
 app.add_middleware(
@@ -315,8 +321,6 @@ def logout(request: Request):
 
 
 
-    
-
 @app.get("/user/info/me")
 def get_my_info(request: Request):
     user_id = request.session.get('user_id')
@@ -544,8 +548,165 @@ def read_policy_detail(policy_id: int):
 # (참고) 서버 실행은 터미널에서: uvicorn main:app --reload
 
 
-# 나이: 23
-# 자녀: 0
-# 결혼여부: true
-# 신생아 여부: true
-# 
+@app.get("/auth/kakao")
+def kakao_login():
+    # 사용자를 카카오 로그인 페이지로 튕겨버리는 역할
+    kakao_auth_url = (
+        f"https://kauth.kakao.com/oauth/authorize?"
+        f"client_id={os.getenv('KAKAO_CLIENT_ID')}&"
+        f"redirect_uri={os.getenv('KAKAO_REDIRECT_URI')}&"
+        f"response_type=code"
+    )
+    return RedirectResponse(kakao_auth_url)
+
+
+@app.get("/auth/kakao/callback")
+async def kakao_callback(code: str, request: Request):
+    # 1. 받은 코드(code)로 토큰(Token) 달라고 카카오에 요청
+    try :
+        async with httpx.AsyncClient() as client:
+            token_res = await client.post(
+                "https://kauth.kakao.com/oauth/token",
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                data={
+                    "grant_type": "authorization_code",
+                    "client_id": os.getenv("KAKAO_CLIENT_ID"),
+                    "redirect_uri": os.getenv("KAKAO_REDIRECT_URI"),
+                    "code": code,
+                    "client_secret": os.getenv("KAKAO_CLIENT_SECRET"),
+                },
+            )
+            token_json = token_res.json()
+
+            if "error" in token_json:
+                print(f"카카오 토큰 발급 실패: {token_json}")
+                return RedirectResponse("http://172.21.68.186:5173/login?error=kakao_failed")
+
+            access_token = token_json.get("access_token")
+
+            # 2. 토큰으로 사용자 정보 가져오기
+            user_info_res = await client.get(
+                "https://kapi.kakao.com/v2/user/me",
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+            user_info = user_info_res.json()
+        
+        kakao_id = user_info.get("id")
+        if not kakao_id:
+            print(f"카카오 유저 정보 조회 실패: {user_info}")
+            return RedirectResponse("http://172.21.68.186:5173/login?error=kakao_failed")
+
+        # 카카오에서 준 정보 파싱
+        kakao_id = str(user_info.get("id"))
+        nickname = user_info.get("properties", {}).get("nickname")
+        # 이메일은 동의 안 하면 없을 수도 있음
+        email = user_info.get("kakao_account", {}).get("email") 
+        
+        # 3. DB 처리 (회원가입 or 로그인) -> database.py에 함수 만들어야 함
+        # username을 'kakao_12345' 이런 식으로 만들어서 중복 방지
+        username = f"kakao_{kakao_id}"
+        
+        # 이 함수는 아래 4단계에서 만들 예정입니다.
+        user_data = db.get_or_create_social_user(
+            username=username, 
+            nickname=nickname, 
+            social_id=kakao_id, 
+            provider="kakao"
+        )
+        
+        # 4. 세션 생성 (로그인 처리)
+        request.session['user_id'] = str(user_data['user_id'])
+        request.session['nickname'] = user_data['nickname']
+        request.session['has_info'] = user_data['has_info']
+        
+        # 5. 프론트엔드 메인페이지로 리다이렉트
+        return RedirectResponse("http://172.21.68.186:5173/main")
+    
+    except Exception as e:
+        print(f"카카오 로그인 에러: {e}")
+        # [추가] 예상치 못한 에러가 나도 로그인 페이지로 반송
+        return RedirectResponse("http://172.21.68.186:5173/login?error=server_error")
+
+@app.get("/auth/naver")
+def naver_login():
+    # state: 사이트 간 위조 공격 방지용 랜덤 문자열 (네이버 필수 권장)
+    state = secrets.token_hex(16)
+    
+    naver_auth_url = (
+        f"https://nid.naver.com/oauth2.0/authorize?"
+        f"response_type=code&"
+        f"client_id={os.getenv('NAVER_CLIENT_ID')}&"
+        f"redirect_uri={os.getenv('NAVER_REDIRECT_URI')}&"
+        f"state={state}"
+    )
+    return RedirectResponse(naver_auth_url)
+
+
+@app.get("/auth/naver/callback")
+async def naver_callback(code: str, state: str, request: Request):
+    # 1. 토큰 발급 요청
+    try :
+        async with httpx.AsyncClient() as client:
+            token_res = await client.post(
+                "https://nid.naver.com/oauth2.0/token",
+                data={
+                    "grant_type": "authorization_code",
+                    "client_id": os.getenv("NAVER_CLIENT_ID"),
+                    "client_secret": os.getenv("NAVER_CLIENT_SECRET"),
+                    "code": code,
+                    "state": state,
+                },
+            )
+            token_json = token_res.json()
+            access_token = token_json.get("access_token")
+
+            # 2. 사용자 정보 요청
+            user_info_res = await client.get(
+                "https://openapi.naver.com/v1/nid/me",
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+            user_info_json = user_info_res.json()
+        
+        # [중요] 네이버는 정보가 'response'라는 키 안에 한 번 더 감싸져 있습니다.
+        # if user_info_json.get("resultcode") != "00":
+        #     raise HTTPException(status_code=400, detail="네이버 로그인 실패")
+        if user_info_json.get("resultcode") != "00":
+                # [수정 전] raise HTTPException(...)
+                # [수정 후] 에러 꼬리표 달고 로그인 페이지로 반송
+            return RedirectResponse("http://172.21.68.186:5173/login?error=naver_failed")
+
+        naver_account = user_info_json.get("response") # 여기를 잘 꺼내야 함!
+        
+        social_id = naver_account.get("id")          # 네이버 고유 ID
+        nickname = naver_account.get("nickname")     # 별명
+        email = naver_account.get("email")           # 이메일
+        
+        # 3. DB 처리 (database.py에 이미 만들어둔 함수 재사용!)
+        # provider를 'naver'로 넘깁니다.
+        username = f"naver_{social_id}"
+        
+        user_data = db.get_or_create_social_user(
+            username=username, 
+            nickname=nickname, 
+            social_id=social_id, 
+            provider="naver"
+        )
+        
+        # 4. 세션 생성 (로그인 처리)
+        request.session['user_id'] = str(user_data['user_id'])
+        request.session['nickname'] = user_data['nickname']
+        request.session['has_info'] = user_data['has_info']
+        
+        # 5. 메인으로 복귀
+        return RedirectResponse("http://172.21.68.186:5173/main")
+    
+    except Exception as e:
+        print(f"네이버 로그인 에러: {e}")
+        # [추가] 예상치 못한 에러가 나도 로그인 페이지로 반송
+        return RedirectResponse("http://172.21.68.186:5173/login?error=server_error")
+    
+
+if __name__ == "__main__":
+    import uvicorn
+    # 여기에 host="0.0.0.0"을 적어두면, 앞으로는 그냥 실행해도 외부 접속이 됩니다.
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

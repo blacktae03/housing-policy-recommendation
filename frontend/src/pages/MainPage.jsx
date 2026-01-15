@@ -15,16 +15,14 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"; // 알림창 컴포넌트 추가
-import { Home, User, LogOut, Heart, Search } from "lucide-react";
+} from "@/components/ui/alert-dialog";
+// [추가] 화살표 아이콘 추가 (ChevronLeft, ChevronRight)
+import { Home, User, LogOut, Heart, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import api from "@/api/axios";
+import logoImg from "@/assets/logo.png";
 
-// 가짜 정책 데이터 (Mock Data)
-// const MOCK_POLICIES = await api.get("/policies", {});
-  // { id: 1, title: "신생아 특례 디딤돌 대출", desc: "최저 1%대 금리로 주택 구입 자금 대출", region: "전국", type: "대출", isFavorite: true },
-  // { id: 2, title: "부산 청년 임차보증금 지원", desc: "부산 거주 청년에게 전세 보증금 이자 지원", region: "부산", type: "주거", isFavorite: false },
-  // { id: 3, title: "중소기업 취업청년 전월세", desc: "중소기업 재직 청년 대상 저리 대출", region: "전국", type: "대출", isFavorite: true },
-  // { id: 4, title: "서울 역세권 청년주택", desc: "대중교통이 편리한 곳에 시세보다 저렴하게 공급", region: "서울", type: "주거", isFavorite: false },
+// ★ 한 페이지에 보여줄 아이템 개수 상수 선언
+const ITEMS_PER_PAGE = 6;
 
 const MainPage = () => {
   const navigate = useNavigate();
@@ -32,7 +30,7 @@ const MainPage = () => {
   // 사용자 정보 상태
   const [userInfo, setUserInfo] = useState({
     nickname: "",
-    has_info: false, // ★ 테스트할 때 이걸 true/false로 바꿔가며 확인해보세요!
+    has_info: false,
     favorite_policies: []
   });
 
@@ -42,6 +40,11 @@ const MainPage = () => {
   const [allPolicies, setAllPolicies] = useState([]);
   const [filteredPolicies, setFilteredPolicies] = useState([]);
   
+  // ★ [추가] 탭별 페이지 상태 관리
+  const [pageAll, setPageAll] = useState(1);       // 전체 탭 페이지
+  const [pageCustom, setPageCustom] = useState(1); // 맞춤 탭 페이지
+  const [pageFav, setPageFav] = useState(1);       // 즐겨찾기 탭 페이지
+
   // 지역 및 아파트 데이터
   const [allSido, setAllSido] = useState([]);
   const [allSigungu, setAllSigungu] = useState([]);
@@ -49,11 +52,11 @@ const MainPage = () => {
   const [selectedSigungu, setSelectedSigungu] = useState("");
 
   // 아파트 검색 관련 상태들
-  const [aptSearchTerm, setAptSearchTerm] = useState(""); // 검색어 입력값
-  const [rawApartmentList, setRawApartmentList] = useState([]); // 해당 지역 전체 아파트 목록 (API에서 가져옴)
-  const [aptSuggestions, setAptSuggestions] = useState([]); // 검색어에 맞춰 필터링된 목록
-  const [isAptListOpen, setIsAptListOpen] = useState(false); // 리스트 보여줄지 여부
-  const [focusIndex, setFocusIndex] = useState(-1); // 키보드 선택용 인덱스 (-1은 선택 안됨)
+  const [aptSearchTerm, setAptSearchTerm] = useState(""); 
+  const [rawApartmentList, setRawApartmentList] = useState([]); 
+  const [aptSuggestions, setAptSuggestions] = useState([]); 
+  const [isAptListOpen, setIsAptListOpen] = useState(false); 
+  const [focusIndex, setFocusIndex] = useState(-1); 
 
   // 로딩 변수
   const [loading, setLoading] = useState(true);
@@ -86,7 +89,6 @@ const MainPage = () => {
         });
         setAllSido(allSidoRes.data);
 
-        // has_info가 true일 때만 맞춤 정책을 탐색하는 api를 호출할 수 있음.
         if (userInfoRes.data.has_info === true) {
           const allUserRes = await api.get("/policies/recommended");
 
@@ -97,7 +99,6 @@ const MainPage = () => {
 
           setFilteredPolicies(processedFilteredPolicies);
         }
-  
   
       } catch (error) {
         console.error("데이터 로딩 실패: ", error);
@@ -113,43 +114,33 @@ const MainPage = () => {
     const fetchApartments = async () => {
       if (selectedSido && selectedSigungu) {
         try {
-          // ★ try 시작: 에러가 날 수 있는 위험한 코드
           const response = await api.get("/regions/apart", {
             params: {
               sido_name: selectedSido,
               sigungu_name: selectedSigungu 
             }
           });
-
-          // ★ [중요 수정] response 통째로 넣으면 안 되고, .data를 꺼내야 합니다!
-          // 백엔드가 리스트([..])를 보냈다면 response.data가 그 리스트입니다.
           setRawApartmentList(response.data); 
-          
         } catch (error) {
-          // ★ catch: 에러 발생 시 실행됨
           console.error("아파트 목록 불러오기 실패:", error);
-          setRawApartmentList([]); // 에러나면 빈 목록으로 초기화 (안전장치)
+          setRawApartmentList([]); 
         }
       } else {
         setRawApartmentList([]);
       }
-      // 지역이 바뀌면 검색어 초기화
-      // setAptSearchTerm("");
       setAptSuggestions([]);
       setIsAptListOpen(false);
     };
 
     fetchApartments();
-  }, [selectedSido, selectedSigungu]); // 시/도, 시/군/구가 바뀔 때마다 실행
+  }, [selectedSido, selectedSigungu]);
 
-  // 아파트 검색어 입력 핸들러
   const handleAptSearchChange = (e) => {
     const value = e.target.value;
     setAptSearchTerm(value);
-    setFocusIndex(-1); // 키보드 포커스 초기화
+    setFocusIndex(-1); 
 
     if (value.trim().length > 0) {
-      // 입력된 글자가 포함된 아파트만 필터링 (영어 대소문자 무시 등 로직 추가 가능)
       const filtered = rawApartmentList.filter((apt) => 
         apt.includes(value)
       );
@@ -161,21 +152,17 @@ const MainPage = () => {
     }
   };
 
-  // 아파트 선택 핸들러 (마우스 클릭 or 엔터)
   const handleSelectApartment = (aptName) => {
     setAptSearchTerm(aptName);
     setIsAptListOpen(false);
     setFocusIndex(-1);
-    // 여기서 나중에 최종 검색 API 호출 등을 하면 됩니다.
-    console.log("선택된 아파트:", aptName);
   };
 
-  // 키보드 이벤트 핸들러 (화살표 위/아래, 엔터)
   const handleKeyDown = (e) => {
     if (!isAptListOpen || aptSuggestions.length === 0) return;
 
     if (e.key === "ArrowDown") {
-      e.preventDefault(); // 커서 이동 방지
+      e.preventDefault(); 
       setFocusIndex((prev) => (prev < aptSuggestions.length - 1 ? prev + 1 : prev));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
@@ -190,36 +177,29 @@ const MainPage = () => {
     }
   };
 
-  
-  // [수정된 로직] 정보 수정 버튼 클릭 핸들러
   const handleEditInfoClick = () => {
     if (userInfo.has_info) {
-      // 정보가 있으면 -> 마이페이지(수정)로 이동
       navigate("/mypage");
     } else {
-      // 정보가 없으면 -> 알림창 띄우기
       setIsAlertOpen(true);
     }
   };
   
   const handleLogout = async () => {
     const response = await api.post("/logout", {});
-    
     alert(response.data.message);
     navigate("/"); 
   };
 
   const handleToggleFavorite = async (policyId) => {
-    // 1. 전체 정책 목록에서 찾아서 뒤집기
     setAllPolicies((prev) => 
       prev.map((policy) => 
         policy.policy_id === policyId 
-          ? { ...policy, isFavorite: !policy.isFavorite } // 타겟 발견! 뒤집어!
-          : policy // 아니면 그대로 둬
+          ? { ...policy, isFavorite: !policy.isFavorite } 
+          : policy 
       )
     );
 
-    // 2. 맞춤 정책 목록에서도 찾아서 뒤집기 (동기화)
     setFilteredPolicies((prev) => 
       prev.map((policy) => 
         policy.policy_id === policyId 
@@ -228,53 +208,36 @@ const MainPage = () => {
       )
     );
 
-    // 3. DB에 반영하기
     await api.post(`/favorites/${policyId}`)
   };
 
-  // [API 호출 함수] 시/도 이름을 주면 시/군/구 리스트를 반환
   const fetchSigunguList = async (sido) => {
     try {
-      // GET 요청은 데이터를 params에 넣어서 보냅니다.
-      // 예: /regions/sigungu?sido=서울특별시
       const response = await api.get(`/regions/sigungu/${sido}`);
-      return response.data; // ["강남구", "서초구", ...]
+      return response.data; 
     } catch (error) {
       console.error("시군구 불러오기 실패:", error);
       return [];
     }
   };
 
-  // [이벤트 핸들러] 시/도 선택 상자가 바뀌었을 때 실행!
   const handleSidoChange = async (newSido) => {
-    // 1. 선택된 시/도 업데이트
     setSelectedSido(newSido);
-    
-    // 2. 시/군/구 선택 초기화 (시/도가 바뀌었으니 기존 구 선택은 의미 없음)
     setSelectedSigungu("");
-    setAllSigungu([]); // 일단 비워두기 (로딩 느낌)
-
-    // setAptSearchTerm(""); // 시도가 바뀌면 아파트 검색어도 초기화
-
-    // 3. API 호출해서 리스트 받아오기
+    setAllSigungu([]); 
     const newList = await fetchSigunguList(newSido);
-    
-    // 4. 받아온 리스트 저장 -> 화면이 자동으로 바뀜
     setAllSigungu(newList);
   };
 
   const filterByApart = async () => {
-    // 1. 유효성 검사: 선택된 값이 없으면 실행 안 함
     if (!selectedSido || !selectedSigungu || !aptSearchTerm) {
       alert("지역과 아파트 이름을 모두 선택해주세요.");
       return;
     }
 
     try {
-      setLoading(true); // 로딩 시작 (선택 사항)
+      setLoading(true); 
 
-      // 2. API 호출하여 아파트 상세 정보 가져오기
-      // GET 방식 권장: await api.get("/policies/recommended/detail", { params: { sido: selectedSido, sigungu: selectedSigungu, apt: aptSearchTerm } });
       const response = await api.get("/policies/recommended/detail", {
         params: {
           sido_name: selectedSido,
@@ -283,34 +246,21 @@ const MainPage = () => {
         }
       });
 
-      // 백엔드에서 받아온 아파트 데이터 아파트의 가격을 가져 옴. (단위: 원)
       const aptData = response.data;
       
-      console.log("선택된 아파트 정보:", aptData);
-
-      // 3. 정책 필터링 로직 함수
-      // 정책이 활성화(Active) 상태여야 하는 조건을 정의합니다.
       const checkIsActive = (policy) => {
-        // 조건 1: 지역 확인 (정책 지역이 '전국'이거나 아파트 지역과 같아야 함)
         const isRegionMatch = policy.region === "전국" || policy.region.includes(selectedSido);
-        
-        // 조건 2: 가격 확인 (정책에 가격 제한이 있다면 아파트 가격이 그보다 낮아야 함)
-        // policy.limit_price가 없으면(null/undefined) 가격 제한 없는 정책으로 간주
         const isPriceMatch = !policy.max_house_price || aptData <= policy.max_house_price;
-
         return isRegionMatch && isPriceMatch;
       };
 
-      // 4. 전체 정책 리스트 업데이트 (기존 데이터 유지 + isDisabled 속성 추가)
       setAllPolicies((prevPolicies) => 
         prevPolicies.map((policy) => ({
           ...policy,
-          // 조건에 맞지 않으면(false) isDisabled를 true로 설정
           isDisabled: !checkIsActive(policy) 
         }))
       );
 
-      // 5. 맞춤 정책 리스트 업데이트 (동일 로직)
       setFilteredPolicies((prevPolicies) => 
         prevPolicies.map((policy) => ({
           ...policy,
@@ -318,11 +268,16 @@ const MainPage = () => {
         }))
       );
 
+      // ★ [추가] 검색 필터 적용 시 페이지를 1페이지로 초기화
+      setPageAll(1);
+      setPageCustom(1);
+      setPageFav(1);
+
     } catch (error) {
       console.error("아파트 정보 조회 실패:", error);
       alert("아파트 정보를 불러오는데 실패했습니다.");
     } finally {
-      setLoading(false); // 로딩 끝
+      setLoading(false); 
     }
   };
   
@@ -330,21 +285,43 @@ const MainPage = () => {
     return <div className="flex justify-center items-center h-screen">로딩 중...</div>;
   }
 
+  // ★ [추가] 페이지네이션 데이터 계산 함수
+  // 전체 데이터 리스트와 현재 페이지 번호를 받아서, 해당 페이지에 보여줄 데이터만 잘라서 반환
+  const getPagedData = (data, currentPage) => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return data.slice(startIndex, endIndex);
+  };
+
+  // 즐겨찾기 목록 필터링 (렌더링 시에만 필터링하여 페이지네이션 적용)
+  const favoritePolicies = allPolicies.filter(p => p.isFavorite);
+
   return (
     <div className="min-h-screen w-full bg-theme-bonjour font-sans flex flex-col">
       
-      {/* 1. 상단 헤더 (GNB) */}
+      {/* 헤더 */}
       <header className="bg-white/80 backdrop-blur-md border-b border-theme-venus/20 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
+          {/* <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
             <div className="p-2 rounded-full bg-theme-bonjour">
-              <Home className="w-5 h-5 text-theme-livid" />
-            </div>
+              <img src={logoImg} alt="집살때 로고" className="h-10 w-auto object-contain" />
+            </div>  
             <span className="text-xl font-bold text-theme-livid">Logo</span>
+          </div> */}
+          {/* ▼▼▼ [수정됨] 로고 영역 ▼▼▼ */}
+          <div className="flex items-center cursor-pointer" onClick={() => navigate("/")}>
+            {/* 1. 감싸고 있던 div(배경색, 패딩)를 제거했습니다. */}
+            {/* 2. 이미지 높이를 h-10에서 h-16(헤더 높이랑 맞춤)으로 키웠습니다. */}
+            {/* 3. 옆에 있던 불필요한 'Logo' 텍스트 span을 제거했습니다. */}
+            <img 
+              src={logoImg} 
+              alt="집살때 로고" 
+              className="h-9 w-auto object-contain" // h-16 (약 64px)으로 키움
+            />
           </div>
+          {/* ▲▲▲ [수정됨] 로고 영역 ▲▲▲ */}
 
           <div className="flex items-center gap-3">
-            {/* 버튼 클릭 시 handleEditInfoClick 실행 */}
             <Button variant="ghost" size="sm" onClick={handleEditInfoClick} className="text-theme-venus hover:text-theme-livid">
               <User className="w-4 h-4 mr-2" />
               정보 수정
@@ -357,7 +334,7 @@ const MainPage = () => {
         </div>
       </header>
 
-      {/* 2. 메인 컨텐츠 영역 */}
+      {/* 메인 컨텐츠 */}
       <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-8">
         
         <div className="mb-8 space-y-6">
@@ -365,16 +342,17 @@ const MainPage = () => {
             <span className="text-theme-livid">{userInfo.nickname}</span>님을 위한 정책을 찾아볼까요?
           </h1>
 
-          {/* 아파트 검색 필터 */}
+          {/* 아파트 검색 필터 (생략 - 기존 코드와 동일) */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-theme-venus/20 space-y-4">
-            <div className="flex flex-col md:flex-row gap-4">
+             {/* ... 기존 Select 및 Search Input 영역 ... */}
+             <div className="flex flex-col md:flex-row gap-4">
               <Select value={selectedSido} onValueChange={handleSidoChange}>
                 <SelectTrigger className="w-full md:w-[180px]">
                   <SelectValue placeholder="시/도 선택" />
                 </SelectTrigger>
                 <SelectContent>
                   {allSido.map((sido) => (
-                    <SelectItem value={sido}>
+                    <SelectItem value={sido} key={sido}>
                       {sido}
                     </SelectItem>
                   ))}
@@ -386,15 +364,13 @@ const MainPage = () => {
                   <SelectValue placeholder="시/군/구 선택" />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* 리스트가 비어있으면(길이가 0이면) 안내 문구 표시 */}
                   {allSigungu.length === 0 ? (
                       <div className="p-3 text-sm text-center text-theme-venus">
                           시/도를 먼저 선택해주세요 👆
                       </div>
                   ) : (
-                      // 리스트가 있으면 map으로 뿌려주기
                       allSigungu.map((sigungu) => (
-                          <SelectItem value={sigungu}>
+                          <SelectItem value={sigungu} key={sigungu}>
                               {sigungu}
                           </SelectItem>
                       ))
@@ -403,8 +379,6 @@ const MainPage = () => {
               </Select>
 
               <div className="flex-1 flex gap-2 relative"> 
-                {/* relative 클래스가 중요합니다! 드롭다운의 기준점이 됩니다. */}
-                
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-venus w-4 h-4" />
                   <Input 
@@ -414,17 +388,13 @@ const MainPage = () => {
                     onChange={handleAptSearchChange}
                     onKeyDown={handleKeyDown}
                     onFocus={() => {
-                        // 다시 포커스 잡았을 때 검색어가 있으면 리스트 다시 보여주기
                         if(aptSearchTerm && aptSuggestions.length > 0) setIsAptListOpen(true);
                     }}
                     onBlur={() => {
-                        // 바로 닫으면 클릭 이벤트가 씹힐 수 있어서 살짝 지연 (선택적)
                         setTimeout(() => setIsAptListOpen(false), 200);
                     }}
-                    // disabled={!selectedSigungu} // 시군구 선택 전엔 입력 불가하게 막기
                   />
 
-                  {/* ★ 자동완성 리스트 (Dropdown) */}
                   {isAptListOpen && aptSuggestions.length > 0 && (
                     <ul className="absolute z-50 w-full mt-1 bg-white border border-theme-venus/20 rounded-md shadow-lg max-h-60 overflow-y-auto">
                       {aptSuggestions.map((apt, index) => (
@@ -433,20 +403,16 @@ const MainPage = () => {
                           className={`px-4 py-2 cursor-pointer text-sm transition-colors
                             ${index === focusIndex ? "bg-theme-bonjour text-theme-livid" : "text-theme-black hover:bg-gray-50"}
                           `}
-                          // 마우스 클릭 시 선택 (onMouseDown을 써야 onBlur보다 먼저 실행됨)
                           onMouseDown={() => handleSelectApartment(apt)} 
-                          // 마우스 올리면 포커스 인덱스도 같이 이동
                           onMouseEnter={() => setFocusIndex(index)}
                         >
-                          {/* 검색어 부분 하이라이트 처리 (선택사항) */}
                           {apt.split(aptSearchTerm).map((part, i) => 
-                            i === 0 ? part : <><span className="text-theme-pink font-bold">{aptSearchTerm}</span>{part}</>
+                            i === 0 ? part : <span key={i}><span className="text-theme-pink font-bold">{aptSearchTerm}</span>{part}</span>
                           )}
                         </li>
                       ))}
                     </ul>
                   )}
-                  {/* 검색 결과 없음 표시 */}
                   {isAptListOpen && aptSuggestions.length === 0 && aptSearchTerm && (
                       <div className="absolute z-50 w-full mt-1 bg-white border border-theme-venus/20 rounded-md shadow-lg p-3 text-center text-sm text-theme-venus">
                           검색 결과가 없습니다.
@@ -470,23 +436,40 @@ const MainPage = () => {
             <TabsTrigger value="favorites" className="data-[state=active]:bg-white data-[state=active]:text-theme-livid data-[state=active]:shadow-sm rounded-lg">즐겨찾기</TabsTrigger>
           </TabsList>
 
+          {/* 1. 전체 탭 */}
           <TabsContent value="all" className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {allPolicies.map((policy) => (
+            {/* ★ [수정] min-h-[550px] 추가: 카드가 적어도 2줄 높이만큼의 공간을 강제로 차지하게 함 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[460px] content-start">
+              {getPagedData(allPolicies, pageAll).map((policy) => (
                 <PolicyCard key={policy.policy_id} policy={policy} onToggle={handleToggleFavorite} isDisabled={policy.isDisabled}/>
               ))}
             </div>
+            <PaginationControl 
+              totalItems={allPolicies.length} 
+              currentPage={pageAll} 
+              onPageChange={setPageAll} 
+            />
           </TabsContent>
 
+          {/* 2. 맞춤 정책 탭 */}
           <TabsContent value="custom" className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
             {userInfo.has_info ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                 {filteredPolicies.map((policy) => (
-                    <PolicyCard key={policy.policy_id} policy={policy} badge="추천" onToggle={handleToggleFavorite} isDisabled={policy.isDisabled}/>
-                  ))}
-              </div>
+              <>
+                {/* ★ [수정] 여기도 min-h-[550px] 추가 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[460px] content-start">
+                   {getPagedData(filteredPolicies, pageCustom).map((policy) => (
+                      <PolicyCard key={policy.policy_id} policy={policy} badge="추천" onToggle={handleToggleFavorite} isDisabled={policy.isDisabled}/>
+                    ))}
+                </div>
+                <PaginationControl 
+                  totalItems={filteredPolicies.length} 
+                  currentPage={pageCustom} 
+                  onPageChange={setPageCustom} 
+                />
+              </>
             ) : (
-              <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed border-theme-venus">
+              // 정보 없을 때 안내창
+              <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed border-theme-venus min-h-[400px]">
                 <div className="p-4 bg-theme-bonjour rounded-full mb-4">
                   <User className="w-10 h-10 text-theme-venus" />
                 </div>
@@ -499,23 +482,35 @@ const MainPage = () => {
             )}
           </TabsContent>
 
+          {/* 3. 즐겨찾기 탭 */}
           <TabsContent value="favorites" className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {allPolicies.filter(p => p.isFavorite).map((policy) => (
+            {/* ★ [수정] 여기도 min-h-[550px] 추가 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[460px] content-start">
+              {getPagedData(favoritePolicies, pageFav).map((policy) => (
                 <PolicyCard key={policy.policy_id} policy={policy} onToggle={handleToggleFavorite} isDisabled={policy.isDisabled}/>
               ))}
+              
+              {/* 즐겨찾기가 0개일 때 메시지를 그리드 안이나 밖에서 처리 */}
+              {favoritePolicies.length === 0 && (
+                <div className="col-span-full flex justify-center items-center h-full text-theme-venus">
+                   {/* h-full을 쓰면 550px 중앙에 뜹니다 */}
+                   <div>아직 즐겨찾기한 정책이 없어요. <Heart className="inline w-4 h-4"/>를 눌러보세요!</div>
+                </div>
+              )}
             </div>
-            {allPolicies.filter(p => p.isFavorite).length === 0 && (
-              <div className="text-center py-20 text-theme-venus">
-                아직 즐겨찾기한 정책이 없어요. <Heart className="inline w-4 h-4"/>를 눌러보세요!
-              </div>
+            
+            {favoritePolicies.length > 0 && (
+              <PaginationControl 
+                totalItems={favoritePolicies.length} 
+                currentPage={pageFav} 
+                onPageChange={setPageFav} 
+              />
             )}
           </TabsContent>
         </Tabs>
 
       </main>
 
-      {/* [추가됨] 알림창 컴포넌트 (Alert Dialog) */}
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent className="bg-white">
           <AlertDialogHeader>
@@ -526,11 +521,9 @@ const MainPage = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            {/* 아니요: 단순히 창을 닫음 */}
             <AlertDialogCancel className="border-theme-venus/30 text-theme-venus hover:text-theme-black hover:bg-theme-bonjour">
               아니요
             </AlertDialogCancel>
-            {/* 예: User Info 페이지로 이동 */}
             <AlertDialogAction 
               onClick={() => navigate("/user-info")}
               className="bg-theme-livid hover:bg-theme-livid/90 text-white"
@@ -545,12 +538,80 @@ const MainPage = () => {
   );
 };
 
+// ★ [추가] 재사용 가능한 페이지네이션 컴포넌트
+const PaginationControl = ({ totalItems, currentPage, onPageChange }) => {
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="flex justify-center items-center gap-2 mt-8 py-4">
+      {/* 이전 페이지 버튼 */}
+      <Button
+        variant="ghost" // [수정] outline -> ghost (흰색 사각형 제거)
+        size="icon"
+        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+        disabled={currentPage === 1}
+        // [수정] hover시 배경색도 연하게 처리하거나 없앰
+        className="h-8 w-8 text-theme-venus hover:text-theme-livid hover:bg-transparent"
+      >
+        <ChevronLeft className="h-6 w-6" />
+      </Button>
+
+      {/* 페이지 번호 표시 */}
+      <div className="flex gap-1">
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+          <Button
+            key={pageNum}
+            variant={currentPage === pageNum ? "default" : "ghost"}
+            size="sm"
+            onClick={() => onPageChange(pageNum)}
+            // 선택 안 된 버튼도 흰색 박스 없이 글자만 나오게 ghost 처리
+            className={`w-8 h-8 p-0 font-normal ${
+              currentPage === pageNum 
+                ? "bg-theme-livid text-white hover:bg-theme-livid/90 shadow-md" 
+                : "text-theme-venus hover:text-theme-black hover:bg-theme-bonjour/50"
+            }`}
+          >
+            {pageNum}
+          </Button>
+        ))}
+      </div>
+
+      {/* 다음 페이지 버튼 */}
+      <Button
+        variant="ghost" // [수정] outline -> ghost
+        size="icon"
+        onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+        disabled={currentPage === totalPages}
+        className="h-8 w-8 text-theme-venus hover:text-theme-livid hover:bg-transparent"
+      >
+        <ChevronRight className="h-6 w-6" />
+      </Button>
+    </div>
+  );
+};
+
 const PolicyCard = ({ policy, badge, onToggle, isDisabled }) => {
+  const handleViewDetails = () => {
+    // 1. 링크가 있는지 확인 (백엔드 필드명이 policy_link 라고 가정)
+    // 만약 필드명이 'url'이라면 policy.url로 수정해주세요!
+    const linkUrl = policy.policy_url;
+
+    if (linkUrl) {
+      // 2. 새 탭(_blank)에서 열기
+      // noopener, noreferrer는 보안상 권장되는 옵션입니다.
+      window.open(linkUrl, "_blank", "noopener,noreferrer");
+    } else {
+      alert("해당 정책의 상세 링크가 없습니다.");
+    }
+  };
+
   return (
     <Card className={`hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-theme-venus/30 group
     ${isDisabled 
-          ? "opacity-50 grayscale bg-gray-100 pointer-events-none" // 🔴 비활성 상태 스타일
-          : "hover:shadow-lg hover:-translate-y-1" // 🟢 활성 상태일 때만 호버 효과 적용
+          ? "opacity-50 grayscale bg-gray-100 pointer-events-none" 
+          : "hover:shadow-lg hover:-translate-y-1" 
         }`}>
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
@@ -559,11 +620,10 @@ const PolicyCard = ({ policy, badge, onToggle, isDisabled }) => {
           </Badge>
           <button className="text-theme-venus hover:text-theme-pink transition-colors"
             onClick={(e) => {
-              e.stopPropagation(); // 카드 클릭 이벤트와 겹치지 않게 방지
+              e.stopPropagation(); 
               onToggle(policy.policy_id);
             }}
           >
-            
             <Heart className={`w-5 h-5 ${policy.isFavorite ? "fill-theme-pink text-theme-pink" : ""}`} />
           </button>
         </div>
@@ -578,7 +638,7 @@ const PolicyCard = ({ policy, badge, onToggle, isDisabled }) => {
         </CardDescription>
       </CardContent>
       <CardFooter>
-        <Button variant="outline" className="w-full border-theme-venus/30 hover:bg-theme-bonjour hover:text-theme-livid">
+        <Button variant="outline" className="w-full border-theme-venus/30 hover:bg-theme-bonjour hover:text-theme-livid" onClick={handleViewDetails}>
           자세히 보기
         </Button>
       </CardFooter>
