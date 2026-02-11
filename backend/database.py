@@ -32,6 +32,68 @@ def test():
     conn.close()
     return result
 
+def init_db():
+    """서버 시작 시 필요한 모든 테이블을 자동으로 생성함"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # 1. users 테이블 (UUID 사용 버전)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                username VARCHAR(50) UNIQUE NOT NULL,
+                password VARCHAR(255),
+                nickname VARCHAR(50),
+                provider VARCHAR(20),
+                social_id VARCHAR(100),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+
+        # 2. user_info 테이블
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS user_info (
+                info_id SERIAL PRIMARY KEY,
+                user_id UUID UNIQUE REFERENCES users(user_id) ON DELETE CASCADE,
+                birth_date DATE,
+                income INT,
+                asset INT,
+                is_house_owner BOOLEAN,
+                has_newborn BOOLEAN,
+                is_newlywed BOOLEAN,
+                child_count INT,
+                household_size INT,
+                dual_income BOOLEAN,
+                is_married BOOLEAN,
+                is_single_parent BOOLEAN,
+                is_disabled BOOLEAN,
+                is_multicultural BOOLEAN
+            );
+        """)
+
+        # 3. favorites 테이블
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS favorites (
+                favorite_id SERIAL PRIMARY KEY,
+                user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
+                policy_id VARCHAR(50),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, policy_id)
+            );
+        """)
+
+        # 필요한 다른 테이블들(policies, region_code 등)도 같은 방식으로 추가하세요.
+        
+        conn.commit()
+        print("✅ 모든 테이블이 확인/생성되었습니다.")
+    except Exception as e:
+        print(f"❌ 테이블 생성 에러: {e}")
+        conn.rollback()
+    finally:
+        cursor.close()
+        conn.close()
+
 
 # db 연결 251230
 def get_db_connection():

@@ -4,6 +4,7 @@ from requests import Session
 from starlette.middleware.sessions import SessionMiddleware # 세션 관리 도구
 from fastapi.middleware.cors import CORSMiddleware
 import database as db
+from database import init_db
 from pydantic import BaseModel, Field
 from datetime import date
 import openapi as oa
@@ -15,6 +16,8 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
+init_db()
 
 app = FastAPI()
 
