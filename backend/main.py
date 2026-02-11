@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi import APIRouter, FastAPI, HTTPException, Request, Depends
 from fastapi.responses import JSONResponse, RedirectResponse
 from requests import Session
 from starlette.middleware.sessions import SessionMiddleware # 세션 관리 도구
@@ -17,6 +17,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = FastAPI()
+
+router = APIRouter(prefix="/api")
 
 origins = [
     "http://localhost:5173",
@@ -188,7 +190,7 @@ def get_recommended_policies(request: Request):
         "policies": recommended_list2
     }
 
-@app.get("/test")
+@router.get("/test")
 def test(request: Request):
     user_info = db.get_user_info(request.session.get('user_id'))
     bd = user_info.get('birth_date')
@@ -246,7 +248,7 @@ class ApartInfo(BaseModel):
 
 # 2. [API] 회원가입 엔드포인트
 # 사용 중 260106
-@app.post("/signup")
+@router.post("/signup")
 def signup(user: UserSignup):
     # 1. 아이디 중복 검사 (DB 부하를 줄이기 위해 먼저 체크)
     if db.get_user_by_username(user.username):
@@ -278,7 +280,7 @@ def signup(user: UserSignup):
     return {"message": f"환영합니다, {user.nickname}님! 회원가입이 완료되었습니다."}
 
 # 사용 중 260109
-@app.get("/user/me")
+@router.get("/user/me")
 def check_my_info(request: Request):
     # 1. 요청에 붙어온 세션(쿠키)를 백엔드가 뜯어봅니다.
     user_id = request.session.get("user_id")
@@ -303,7 +305,7 @@ def check_my_info(request: Request):
 # 3. 로그인 API
 # async 제거
 # 사용 중 260106
-@app.post("/login")
+@router.post("/login")
 def login(login_data: LoginRequest, request: Request):
     # Pydantic(LoginRequest) 덕분에 데이터가 깔끔하게 들어옵니다.
     input_id = login_data.username
@@ -331,14 +333,14 @@ def login(login_data: LoginRequest, request: Request):
 # 4. 로그아웃 API (세션 삭제)
 # async 제거
 # 사용 중 260109
-@app.post("/logout")
+@router.post("/logout")
 def logout(request: Request):
     request.session.clear() # 세션 비우기
     return {"message": "로그아웃 되었습니다."}
 
 
 
-@app.get("/user/info/me")
+@router.get("/user/info/me")
 def get_my_info(request: Request):
     user_id = request.session.get('user_id')
     if not user_id:
@@ -380,7 +382,7 @@ def get_my_info(request: Request):
 # [추가] 사용자 상세 정보 저장/수정 API
 # async 제거
 # 사용 중 260106
-@app.put("/user/info/me")
+@router.put("/user/info/me")
 def update_my_info(info: UserInfoRequest, request: Request):
     # 1. 세션에서 로그인한 유저 ID 확인 (로그인 안 했으면 튕겨냄)
     user_id = request.session.get('user_id')
@@ -416,12 +418,12 @@ def update_my_info(info: UserInfoRequest, request: Request):
 # (database.py에 get_user_info가 추가되었다고 가정)
 
 # 사용 중 260109
-@app.get("/policies/recommended")
+@router.get("/policies/recommended")
 def get_recommended_policies_user_info(request: Request):
     return get_recommended_policies(request)
 
 # 사용 중 260109
-@app.get("/policies/recommended/detail")
+@router.get("/policies/recommended/detail")
 def get_recommended_policies_with_detail(request: Request, apart_info: ApartInfo = Depends()) :
     basic_recommended_list = get_recommended_policies(request)['policies']
 
@@ -498,7 +500,7 @@ def get_recommended_policies_with_detail(request: Request, apart_info: ApartInfo
     return apart_amounts_min
 
 # 사용 중 260109
-@app.get("/regions/sido")
+@router.get("/regions/sido")
 def get_sido_list():
     sido_list = db.get_sido()
     simple_sido_list = sorted(set([dic['sido'] for dic in sido_list]))
@@ -506,7 +508,7 @@ def get_sido_list():
     return simple_sido_list
 
 # 사용 중 260109
-@app.get("/regions/sigungu/{sido_name}")
+@router.get("/regions/sigungu/{sido_name}")
 def get_sigungu_list(sido_name):
     sigungu_list = db.get_sigungu(sido_name)
     simple_sigungu_list = sorted(set([dic['sigungu'] for dic in sigungu_list if dic['sigungu'] is not None]))
@@ -518,7 +520,7 @@ def get_sigungu_list(sido_name):
 
 # 사용 중 260109
 # 이렇게 하면 근데 parameter로 sigungu가 안넘어왔을 때 예외처리를 안해도 되나?
-@app.get("/regions/apart")
+@router.get("/regions/apart")
 def get_apart_list(sido_name, sigungu_name) :
     region_code = db.get_region_code(sido_name, sigungu_name)
     apart_list = oa.get_recent_3months_apt_trades(region_code)
@@ -529,7 +531,7 @@ def get_apart_list(sido_name, sigungu_name) :
 
 
 # 사용 중 260109
-@app.post("/favorites/{policy_id}")
+@router.post("/favorites/{policy_id}")
 def toggle_favorite(policy_id: str, request: Request):
     user_id = request.session.get("user_id")
     if not user_id:
@@ -539,23 +541,23 @@ def toggle_favorite(policy_id: str, request: Request):
 
 
 # 사용 중 260109
-@app.get("/favorites/me")
+@router.get("/favorites/me")
 def get_favorite_policies_list(request: Request):
     return db.get_my_favorite_ids(request.session.get('user_id'))
 
 
 # 1. 기본 접속 테스트
-@app.get("/")
+@router.get("/")
 def read_root():
     return {"message": "부동산 정책 추천 서비스 API에 오신 것을 환영합니다! 🚀"}
 
 # 2. 전체 정책 조회 API
-@app.get("/policies")
+@router.get("/policies")
 def read_policies():
     return db.get_all_policies_output()
 
 # 3. 특정 정책 상세 조회 API
-@app.get("/policies/{policy_id}")
+@router.get("/policies/{policy_id}")
 def read_policy_detail(policy_id: int):
     policy = db.get_policy_output_by_id(policy_id)
     if policy is None:
@@ -565,7 +567,7 @@ def read_policy_detail(policy_id: int):
 # (참고) 서버 실행은 터미널에서: uvicorn main:app --reload
 
 
-@app.get("/auth/kakao")
+@router.get("/auth/kakao")
 def kakao_login():
     # 사용자를 카카오 로그인 페이지로 튕겨버리는 역할
     kakao_auth_url = (
@@ -577,7 +579,7 @@ def kakao_login():
     return RedirectResponse(kakao_auth_url)
 
 
-@app.get("/auth/kakao/callback")
+@router.get("/auth/kakao/callback")
 async def kakao_callback(code: str, request: Request):
     # 1. 받은 코드(code)로 토큰(Token) 달라고 카카오에 요청
     try :
@@ -644,7 +646,7 @@ async def kakao_callback(code: str, request: Request):
         # [추가] 예상치 못한 에러가 나도 로그인 페이지로 반송
         return RedirectResponse("https://jipsalddae.co.kr/login?error=server_error")
 
-@app.get("/auth/naver")
+@router.get("/auth/naver")
 def naver_login():
     # state: 사이트 간 위조 공격 방지용 랜덤 문자열 (네이버 필수 권장)
     state = secrets.token_hex(16)
@@ -659,7 +661,7 @@ def naver_login():
     return RedirectResponse(naver_auth_url)
 
 
-@app.get("/auth/naver/callback")
+@router.get("/auth/naver/callback")
 async def naver_callback(code: str, state: str, request: Request):
     # 1. 토큰 발급 요청
     try :
@@ -722,6 +724,7 @@ async def naver_callback(code: str, state: str, request: Request):
         # [추가] 예상치 못한 에러가 나도 로그인 페이지로 반송
         return RedirectResponse("https://jipsalddae.co.kr/login?error=server_error")
     
+app.include_router(router)
 
 if __name__ == "__main__":
     import uvicorn
