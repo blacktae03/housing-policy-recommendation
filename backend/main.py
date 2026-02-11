@@ -7,7 +7,7 @@ import database as db
 from pydantic import BaseModel, Field
 from datetime import date
 import openapi as oa
-from collections import defaultdict # 상단에 import 필요
+from collections import OrderedDict, defaultdict # 상단에 import 필요
 import numpy as np
 import secrets # 파이썬 내장 라이브러리 (랜덤 문자열 생성용)
 import httpx
@@ -21,7 +21,7 @@ app = FastAPI()
 origins = [
     "http://localhost:5173", # Vite 기본 포트
     "http://127.0.0.1:5173", # 혹시 IP로 들어올 경우 대비
-    "http://172.21.68.186:5173"
+    "http://172.21.178.20:5173"
 ]
 
 app.add_middleware(
@@ -32,7 +32,12 @@ app.add_middleware(
     allow_headers=["*"],        # 모든 헤더 허용
 )
 
-app.add_middleware(SessionMiddleware, secret_key="super-secret-key-must-be-changed")
+app.add_middleware(
+    SessionMiddleware,
+    secret_key="super-secret-key-must-be-changed",
+    https_only=False,      # 로컬은 http니까 False
+    same_site="lax"        # lax로 두면 로컬에서도 쿠키 잘 먹습니다
+)
 
 
 def calculate_age(birth_date: date):
@@ -66,13 +71,15 @@ def get_recommended_policies(request: Request):
 
     # 3. 전체 정책 목록 가져오기 (DB 조회 2)
     # (나중에는 DB 쿼리 단계에서 지역(region) 등으로 1차 필터링을 하면 더 좋습니다)
-    all_policies = db.get_all_policies() # list[dict]
-
+    all_policies = db.get_all_policies()
+    # all_policies_output = db.get_all_policies_output() # list[dict]
+    # all_policies = OrderedDict()
     # 4. 진짜 나이(만) 가져오기
     real_age = calculate_age(user_info['birth_date'])
     # print(real_age)
     
     recommended_list = []
+    my_household_income_standard = db.get_household_income_standard(user_info['household_size'])['monthly_income'] # 우리 가구 수에 대한 월 평균 소득의 100%
 
     # 4. 필터링 로직 (파이썬으로 한 땀 한 땀 비교)
     for policy in all_policies:
@@ -103,68 +110,78 @@ def get_recommended_policies(request: Request):
         # --- 조건 6: 자녀 수 (min_children) ---
         # 내 자녀 수가 정책 요구보다 적으면 탈락
         if policy['min_children'] and user_info['child_count'] < policy['min_children']: continue
+
+        # --- 조건 7: income (income) ---
+        # 내 수입이 정책 상한선보다 크면 탈락
+        income_limit = policy['income'] if policy['income'] > 1000 else policy['income'] * 12 * my_household_income_standard / 100
+        if income_limit < user_info['income']: continue
             
         # (참고) 소득 조건(Income)은 income_rules 테이블과 조인해야 해서 로직이 조금 복잡합니다.
         # 일단 위 조건들을 다 통과하면 리스트에 넣습니다.
         recommended_list.append(policy)
 
+    policy_ids = set([policy['policy_id'] for policy in recommended_list])
     recommended_list2 = []
 
-    for policy in recommended_list :
-        policy_income = db.get_income_rule(policy['policy_id'])
-        my_household_income_standard = db.get_household_income_standard(user_info['household_size'])['monthly_income'] # 우리 가구 수에 대한 월 평균 소득의 100%
+    for id in policy_ids :
+        output = db.get_policy_output_by_id(id)
+        recommended_list2.append(output)
 
-        income_limit = 0.0
 
-        # --- income_limit 정하기 ---
-        if len(policy_income) == 1 :
-            if policy_income[0]['income_limit'] < 1000 :
-                income_limit = my_household_income_standard * 12 / 100 * policy_income[0]['income_limit'] 
+    # for policy in recommended_list :
+    #     policy_income = db.get_income_rule(policy['policy_id'])
 
-            else :
-                income_limit = policy_income[0]['income_limit']
+    #     income_limit = 0.0
+
+    #     # --- income_limit 정하기 ---
+    #     if len(policy_income) == 1 :
+    #         if policy_income[0]['income_limit'] < 1000 :
+    #             income_limit = my_household_income_standard * 12 / 100 * policy_income[0]['income_limit'] 
+
+    #         else :
+    #             income_limit = policy_income[0]['income_limit']
         
-        else :
-            match policy['policy_id'] :
-                case 100 :
-                    if user_info['is_newlywed'] :
-                        income_limit = policy_income['신혼부부']
+    #     else :
+    #         match policy['policy_id'] :
+    #             case 100 :
+    #                 if user_info['is_newlywed'] :
+    #                     income_limit = policy_income['신혼부부']
                     
-                    elif not user_info['is_house_owner'] and user_info['child_count'] >= 2 :
-                        income_limit = policy_income['생애최초/2자녀']
+    #                 elif not user_info['is_house_owner'] and user_info['child_count'] >= 2 :
+    #                     income_limit = policy_income['생애최초/2자녀']
                     
-                    else :
-                        income_limit = policy_income['기본(디딤돌)']
+    #                 else :
+    #                     income_limit = policy_income['기본(디딤돌)']
                 
-                case 101 :
-                    if user_info['dual_income']  :
-                        income_limit = policy_income['맞벌이(예정)']
+    #             case 101 :
+    #                 if user_info['dual_income']  :
+    #                     income_limit = policy_income['맞벌이(예정)']
                     
-                    else :
-                        income_limit = policy_income['기본(신생아구입)']
+    #                 else :
+    #                     income_limit = policy_income['기본(신생아구입)']
                 
-                case 204 :
-                    if user_info['dual_income'] :
-                        income_limit = my_household_income_standard * 12 / 100 * policy_income['신혼I형(매입)(맞벌이)']
+    #             case 204 :
+    #                 if user_info['dual_income'] :
+    #                     income_limit = my_household_income_standard * 12 / 100 * policy_income['신혼I형(매입)(맞벌이)']
                     
-                    else :
-                        income_limit = my_household_income_standard * 12 / 100 * policy_income['신혼I형(매입)(기본)']
+    #                 else :
+    #                     income_limit = my_household_income_standard * 12 / 100 * policy_income['신혼I형(매입)(기본)']
 
-                case 401 :
-                    if user_info['dual_income'] :
-                        income_limit = my_household_income_standard * 12 / 100 * policy_income['신혼II형(매입)(맞벌이)']
+    #             case 401 :
+    #                 if user_info['dual_income'] :
+    #                     income_limit = my_household_income_standard * 12 / 100 * policy_income['신혼II형(매입)(맞벌이)']
                     
-                    else :
-                        income_limit = my_household_income_standard * 12 / 100 * policy_income['신혼II형(매입)(기본)']
-        # --- income_limit 정하기 ---
+    #                 else :
+    #                     income_limit = my_household_income_standard * 12 / 100 * policy_income['신혼II형(매입)(기본)']
+    #     # --- income_limit 정하기 ---
 
-        # print(policy['policy_name'])
-        # print(income_limit, ' > ', user_info['income'])
+    #     # print(policy['policy_name'])
+    #     # print(income_limit, ' > ', user_info['income'])
         
-        # 사용자의 연 수입이 연 소득 제한보다 높으면 탈락
-        if user_info['income'] > income_limit : continue
+    #     # 사용자의 연 수입이 연 소득 제한보다 높으면 탈락
+    #     if user_info['income'] > income_limit : continue
 
-        recommended_list2.append(policy)
+    #     recommended_list2.append(policy)
 
     return {
         "count": len(recommended_list2),
@@ -535,12 +552,12 @@ def read_root():
 # 2. 전체 정책 조회 API
 @app.get("/policies")
 def read_policies():
-    return db.get_all_policies()
+    return db.get_all_policies_output()
 
 # 3. 특정 정책 상세 조회 API
 @app.get("/policies/{policy_id}")
 def read_policy_detail(policy_id: int):
-    policy = db.get_policy_by_id(policy_id)
+    policy = db.get_policy_output_by_id(policy_id)
     if policy is None:
         raise HTTPException(status_code=404, detail="해당 정책을 찾을 수 없습니다.")
     return policy
@@ -580,7 +597,7 @@ async def kakao_callback(code: str, request: Request):
 
             if "error" in token_json:
                 print(f"카카오 토큰 발급 실패: {token_json}")
-                return RedirectResponse("http://172.21.68.186:5173/login?error=kakao_failed")
+                return RedirectResponse("http://localhost:5173/login?error=kakao_failed")
 
             access_token = token_json.get("access_token")
 
@@ -594,7 +611,7 @@ async def kakao_callback(code: str, request: Request):
         kakao_id = user_info.get("id")
         if not kakao_id:
             print(f"카카오 유저 정보 조회 실패: {user_info}")
-            return RedirectResponse("http://172.21.68.186:5173/login?error=kakao_failed")
+            return RedirectResponse("http://localhost:5173/login?error=kakao_failed")
 
         # 카카오에서 준 정보 파싱
         kakao_id = str(user_info.get("id"))
@@ -620,12 +637,12 @@ async def kakao_callback(code: str, request: Request):
         request.session['has_info'] = user_data['has_info']
         
         # 5. 프론트엔드 메인페이지로 리다이렉트
-        return RedirectResponse("http://172.21.68.186:5173/main")
+        return RedirectResponse("http://localhost:5173/main")
     
     except Exception as e:
         print(f"카카오 로그인 에러: {e}")
         # [추가] 예상치 못한 에러가 나도 로그인 페이지로 반송
-        return RedirectResponse("http://172.21.68.186:5173/login?error=server_error")
+        return RedirectResponse("http://localhost:5173/login?error=server_error")
 
 @app.get("/auth/naver")
 def naver_login():
@@ -673,7 +690,7 @@ async def naver_callback(code: str, state: str, request: Request):
         if user_info_json.get("resultcode") != "00":
                 # [수정 전] raise HTTPException(...)
                 # [수정 후] 에러 꼬리표 달고 로그인 페이지로 반송
-            return RedirectResponse("http://172.21.68.186:5173/login?error=naver_failed")
+            return RedirectResponse("http://localhost:5173/login?error=naver_failed")
 
         naver_account = user_info_json.get("response") # 여기를 잘 꺼내야 함!
         
@@ -698,12 +715,12 @@ async def naver_callback(code: str, state: str, request: Request):
         request.session['has_info'] = user_data['has_info']
         
         # 5. 메인으로 복귀
-        return RedirectResponse("http://172.21.68.186:5173/main")
+        return RedirectResponse("http://localhost:5173/main")
     
     except Exception as e:
         print(f"네이버 로그인 에러: {e}")
         # [추가] 예상치 못한 에러가 나도 로그인 페이지로 반송
-        return RedirectResponse("http://172.21.68.186:5173/login?error=server_error")
+        return RedirectResponse("http://localhost:5173/login?error=server_error")
     
 
 if __name__ == "__main__":

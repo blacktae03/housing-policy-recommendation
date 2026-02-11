@@ -58,17 +58,30 @@ def get_all_policies():
     conn.close()
     return result
 
-def get_policy_by_id(policy_id: int):
+def get_all_policies_output():
+    conn = get_db_connection()
+    # RealDictCursor: 결과를 딕셔너리 형태(JSON)로 받아줌
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    
+    cursor.execute("SELECT * FROM policies_output")
+    result = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    return result
+
+def get_policy_output_by_id(policy_id: int):
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     # [주의] SQLite는 ?, PostgreSQL은 %s를 사용합니다!
-    cursor.execute("SELECT * FROM policies WHERE policy_id = %s", (policy_id,))
+    cursor.execute("SELECT * FROM policies_output WHERE policy_id = %s", (policy_id,))
     result = cursor.fetchone()
     
     cursor.close()
     conn.close()
     return result
+
 
 # 251231
 def create_user(user_data: dict):

@@ -16,8 +16,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-// [추가] 화살표 아이콘 추가 (ChevronLeft, ChevronRight)
-import { Home, User, LogOut, Heart, Search, ChevronLeft, ChevronRight } from "lucide-react";
+// [수정] X 아이콘 (닫기 버튼용) 및 ExternalLink 아이콘 추가
+import { Home, User, LogOut, Heart, Search, ChevronLeft, ChevronRight, X, ExternalLink } from "lucide-react";
 import api from "@/api/axios";
 import logoImg from "@/assets/logo.png";
 
@@ -63,6 +63,9 @@ const MainPage = () => {
   
   // 알림창 열림/닫힘 상태 관리
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+
+  // ★ [추가] 상세 보기(확대) 모달을 위한 상태
+  const [selectedPolicy, setSelectedPolicy] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -110,6 +113,7 @@ const MainPage = () => {
     fetchData();
   }, []);
 
+  // ... (아파트 검색 관련 useEffect 등 기존 코드 유지)
   useEffect(() => {
     const fetchApartments = async () => {
       if (selectedSido && selectedSigungu) {
@@ -135,15 +139,13 @@ const MainPage = () => {
     fetchApartments();
   }, [selectedSido, selectedSigungu]);
 
+  // ... (핸들러 함수들 기존 유지)
   const handleAptSearchChange = (e) => {
     const value = e.target.value;
     setAptSearchTerm(value);
     setFocusIndex(-1); 
-
     if (value.trim().length > 0) {
-      const filtered = rawApartmentList.filter((apt) => 
-        apt.includes(value)
-      );
+      const filtered = rawApartmentList.filter((apt) => apt.includes(value));
       setAptSuggestions(filtered);
       setIsAptListOpen(true);
     } else {
@@ -160,7 +162,6 @@ const MainPage = () => {
 
   const handleKeyDown = (e) => {
     if (!isAptListOpen || aptSuggestions.length === 0) return;
-
     if (e.key === "ArrowDown") {
       e.preventDefault(); 
       setFocusIndex((prev) => (prev < aptSuggestions.length - 1 ? prev + 1 : prev));
@@ -199,7 +200,6 @@ const MainPage = () => {
           : policy 
       )
     );
-
     setFilteredPolicies((prev) => 
       prev.map((policy) => 
         policy.policy_id === policyId 
@@ -207,6 +207,13 @@ const MainPage = () => {
           : policy
       )
     );
+
+    if (selectedPolicy && selectedPolicy.policy_id === policyId) {
+    setSelectedPolicy((prev) => ({
+      ...prev,
+      isFavorite: !prev.isFavorite // 현재 모달의 상태도 뒤집어줌 -> 즉시 색상 변경됨
+    }));
+  }
 
     await api.post(`/favorites/${policyId}`)
   };
@@ -234,10 +241,8 @@ const MainPage = () => {
       alert("지역과 아파트 이름을 모두 선택해주세요.");
       return;
     }
-
     try {
       setLoading(true); 
-
       const response = await api.get("/policies/recommended/detail", {
         params: {
           sido_name: selectedSido,
@@ -245,34 +250,27 @@ const MainPage = () => {
           apart_name: aptSearchTerm
         }
       });
-
       const aptData = response.data;
-      
       const checkIsActive = (policy) => {
         const isRegionMatch = policy.region === "전국" || policy.region.includes(selectedSido);
         const isPriceMatch = !policy.max_house_price || aptData <= policy.max_house_price;
         return isRegionMatch && isPriceMatch;
       };
-
       setAllPolicies((prevPolicies) => 
         prevPolicies.map((policy) => ({
           ...policy,
           isDisabled: !checkIsActive(policy) 
         }))
       );
-
       setFilteredPolicies((prevPolicies) => 
         prevPolicies.map((policy) => ({
           ...policy,
           isDisabled: !checkIsActive(policy)
         }))
       );
-
-      // ★ [추가] 검색 필터 적용 시 페이지를 1페이지로 초기화
       setPageAll(1);
       setPageCustom(1);
       setPageFav(1);
-
     } catch (error) {
       console.error("아파트 정보 조회 실패:", error);
       alert("아파트 정보를 불러오는데 실패했습니다.");
@@ -281,45 +279,41 @@ const MainPage = () => {
     }
   };
   
+  // ★ [추가] 모달 열기 핸들러 (PolicyCard에서 호출됨)
+  const handleOpenDetail = (policy) => {
+    setSelectedPolicy(policy);
+  };
+
+  // ★ [추가] 모달 닫기 핸들러
+  const handleCloseDetail = () => {
+    setSelectedPolicy(null);
+  };
+
   if (loading) {
     return <div className="flex justify-center items-center h-screen">로딩 중...</div>;
   }
 
-  // ★ [추가] 페이지네이션 데이터 계산 함수
-  // 전체 데이터 리스트와 현재 페이지 번호를 받아서, 해당 페이지에 보여줄 데이터만 잘라서 반환
   const getPagedData = (data, currentPage) => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
     return data.slice(startIndex, endIndex);
   };
 
-  // 즐겨찾기 목록 필터링 (렌더링 시에만 필터링하여 페이지네이션 적용)
   const favoritePolicies = allPolicies.filter(p => p.isFavorite);
 
   return (
-    <div className="min-h-screen w-full bg-theme-bonjour font-sans flex flex-col">
+    <div className="min-h-screen w-full bg-theme-bonjour font-sans flex flex-col relative">
       
       {/* 헤더 */}
       <header className="bg-white/80 backdrop-blur-md border-b border-theme-venus/20 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          {/* <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
-            <div className="p-2 rounded-full bg-theme-bonjour">
-              <img src={logoImg} alt="집살때 로고" className="h-10 w-auto object-contain" />
-            </div>  
-            <span className="text-xl font-bold text-theme-livid">Logo</span>
-          </div> */}
-          {/* ▼▼▼ [수정됨] 로고 영역 ▼▼▼ */}
           <div className="flex items-center cursor-pointer" onClick={() => navigate("/")}>
-            {/* 1. 감싸고 있던 div(배경색, 패딩)를 제거했습니다. */}
-            {/* 2. 이미지 높이를 h-10에서 h-16(헤더 높이랑 맞춤)으로 키웠습니다. */}
-            {/* 3. 옆에 있던 불필요한 'Logo' 텍스트 span을 제거했습니다. */}
             <img 
               src={logoImg} 
               alt="집살때 로고" 
-              className="h-9 w-auto object-contain" // h-16 (약 64px)으로 키움
+              className="h-9 w-auto object-contain" 
             />
           </div>
-          {/* ▲▲▲ [수정됨] 로고 영역 ▲▲▲ */}
 
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={handleEditInfoClick} className="text-theme-venus hover:text-theme-livid">
@@ -342,9 +336,8 @@ const MainPage = () => {
             <span className="text-theme-livid">{userInfo.nickname}</span>님을 위한 정책을 찾아볼까요?
           </h1>
 
-          {/* 아파트 검색 필터 (생략 - 기존 코드와 동일) */}
+          {/* 아파트 검색 필터 */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-theme-venus/20 space-y-4">
-             {/* ... 기존 Select 및 Search Input 영역 ... */}
              <div className="flex flex-col md:flex-row gap-4">
               <Select value={selectedSido} onValueChange={handleSidoChange}>
                 <SelectTrigger className="w-full md:w-[180px]">
@@ -413,13 +406,7 @@ const MainPage = () => {
                       ))}
                     </ul>
                   )}
-                  {isAptListOpen && aptSuggestions.length === 0 && aptSearchTerm && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border border-theme-venus/20 rounded-md shadow-lg p-3 text-center text-sm text-theme-venus">
-                          검색 결과가 없습니다.
-                      </div>
-                  )}
                 </div>
-
                 <Button className="bg-theme-livid hover:bg-theme-livid/90" onClick={filterByApart}>
                   검색
                 </Button>
@@ -438,10 +425,16 @@ const MainPage = () => {
 
           {/* 1. 전체 탭 */}
           <TabsContent value="all" className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-            {/* ★ [수정] min-h-[550px] 추가: 카드가 적어도 2줄 높이만큼의 공간을 강제로 차지하게 함 */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[460px] content-start">
               {getPagedData(allPolicies, pageAll).map((policy) => (
-                <PolicyCard key={policy.policy_id} policy={policy} onToggle={handleToggleFavorite} isDisabled={policy.isDisabled}/>
+                <PolicyCard 
+                  key={policy.policy_id} 
+                  policy={policy} 
+                  onToggle={handleToggleFavorite} 
+                  isDisabled={policy.isDisabled}
+                  // ★ [수정] 상세보기 핸들러 전달
+                  onDetail={() => handleOpenDetail(policy)}
+                />
               ))}
             </div>
             <PaginationControl 
@@ -455,10 +448,16 @@ const MainPage = () => {
           <TabsContent value="custom" className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
             {userInfo.has_info ? (
               <>
-                {/* ★ [수정] 여기도 min-h-[550px] 추가 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[460px] content-start">
                    {getPagedData(filteredPolicies, pageCustom).map((policy) => (
-                      <PolicyCard key={policy.policy_id} policy={policy} badge="추천" onToggle={handleToggleFavorite} isDisabled={policy.isDisabled}/>
+                      <PolicyCard 
+                        key={policy.policy_id} 
+                        policy={policy} 
+                        badge="추천" 
+                        onToggle={handleToggleFavorite} 
+                        isDisabled={policy.isDisabled}
+                        onDetail={() => handleOpenDetail(policy)}
+                      />
                     ))}
                 </div>
                 <PaginationControl 
@@ -468,7 +467,6 @@ const MainPage = () => {
                 />
               </>
             ) : (
-              // 정보 없을 때 안내창
               <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed border-theme-venus min-h-[400px]">
                 <div className="p-4 bg-theme-bonjour rounded-full mb-4">
                   <User className="w-10 h-10 text-theme-venus" />
@@ -484,21 +482,23 @@ const MainPage = () => {
 
           {/* 3. 즐겨찾기 탭 */}
           <TabsContent value="favorites" className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-            {/* ★ [수정] 여기도 min-h-[550px] 추가 */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[460px] content-start">
               {getPagedData(favoritePolicies, pageFav).map((policy) => (
-                <PolicyCard key={policy.policy_id} policy={policy} onToggle={handleToggleFavorite} isDisabled={policy.isDisabled}/>
+                <PolicyCard 
+                  key={policy.policy_id} 
+                  policy={policy} 
+                  onToggle={handleToggleFavorite} 
+                  isDisabled={policy.isDisabled}
+                  onDetail={() => handleOpenDetail(policy)}
+                />
               ))}
               
-              {/* 즐겨찾기가 0개일 때 메시지를 그리드 안이나 밖에서 처리 */}
               {favoritePolicies.length === 0 && (
                 <div className="col-span-full flex justify-center items-center h-full text-theme-venus">
-                   {/* h-full을 쓰면 550px 중앙에 뜹니다 */}
                    <div>아직 즐겨찾기한 정책이 없어요. <Heart className="inline w-4 h-4"/>를 눌러보세요!</div>
                 </div>
               )}
             </div>
-            
             {favoritePolicies.length > 0 && (
               <PaginationControl 
                 totalItems={favoritePolicies.length} 
@@ -508,9 +508,9 @@ const MainPage = () => {
             )}
           </TabsContent>
         </Tabs>
-
       </main>
 
+      {/* 알림 다이얼로그 (기존 코드) */}
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent className="bg-white">
           <AlertDialogHeader>
@@ -534,31 +534,39 @@ const MainPage = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* ★ [추가] 상세 보기(확대) 모달 컴포넌트 렌더링 */}
+      {selectedPolicy && (
+        <PolicyDetailModal 
+          policy={selectedPolicy} 
+          onClose={handleCloseDetail} 
+          onToggle={handleToggleFavorite}
+        />
+      )}
+
     </div>
   );
 };
 
-// ★ [추가] 재사용 가능한 페이지네이션 컴포넌트
+/* -------------------------------------------------------------------------- */
+/* 서브 컴포넌트                                 */
+/* -------------------------------------------------------------------------- */
+
+// 1. 페이지네이션 컴포넌트
 const PaginationControl = ({ totalItems, currentPage, onPageChange }) => {
   const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
-
   if (totalPages <= 1) return null;
 
   return (
     <div className="flex justify-center items-center gap-2 mt-8 py-4">
-      {/* 이전 페이지 버튼 */}
       <Button
-        variant="ghost" // [수정] outline -> ghost (흰색 사각형 제거)
+        variant="ghost"
         size="icon"
         onClick={() => onPageChange(Math.max(1, currentPage - 1))}
         disabled={currentPage === 1}
-        // [수정] hover시 배경색도 연하게 처리하거나 없앰
         className="h-8 w-8 text-theme-venus hover:text-theme-livid hover:bg-transparent"
       >
         <ChevronLeft className="h-6 w-6" />
       </Button>
-
-      {/* 페이지 번호 표시 */}
       <div className="flex gap-1">
         {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
           <Button
@@ -566,7 +574,6 @@ const PaginationControl = ({ totalItems, currentPage, onPageChange }) => {
             variant={currentPage === pageNum ? "default" : "ghost"}
             size="sm"
             onClick={() => onPageChange(pageNum)}
-            // 선택 안 된 버튼도 흰색 박스 없이 글자만 나오게 ghost 처리
             className={`w-8 h-8 p-0 font-normal ${
               currentPage === pageNum 
                 ? "bg-theme-livid text-white hover:bg-theme-livid/90 shadow-md" 
@@ -577,10 +584,8 @@ const PaginationControl = ({ totalItems, currentPage, onPageChange }) => {
           </Button>
         ))}
       </div>
-
-      {/* 다음 페이지 버튼 */}
       <Button
-        variant="ghost" // [수정] outline -> ghost
+        variant="ghost"
         size="icon"
         onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
         disabled={currentPage === totalPages}
@@ -592,33 +597,20 @@ const PaginationControl = ({ totalItems, currentPage, onPageChange }) => {
   );
 };
 
-const PolicyCard = ({ policy, badge, onToggle, isDisabled }) => {
-  const handleViewDetails = () => {
-    // 1. 링크가 있는지 확인 (백엔드 필드명이 policy_link 라고 가정)
-    // 만약 필드명이 'url'이라면 policy.url로 수정해주세요!
-    const linkUrl = policy.policy_url;
-
-    if (linkUrl) {
-      // 2. 새 탭(_blank)에서 열기
-      // noopener, noreferrer는 보안상 권장되는 옵션입니다.
-      window.open(linkUrl, "_blank", "noopener,noreferrer");
-    } else {
-      alert("해당 정책의 상세 링크가 없습니다.");
-    }
-  };
-
+// 2. 정책 카드 컴포넌트 (수정됨: onDetail prop 사용)
+const PolicyCard = ({ policy, badge, onToggle, isDisabled, onDetail }) => {
   return (
-    <Card className={`hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-theme-venus/30 group
+    <Card className={`hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-theme-venus/30 group flex flex-col h-full
     ${isDisabled 
           ? "opacity-50 grayscale bg-gray-100 pointer-events-none" 
-          : "hover:shadow-lg hover:-translate-y-1" 
+          : "bg-white hover:shadow-xl hover:-translate-y-1" 
         }`}>
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
           <Badge variant="secondary" className="bg-theme-bonjour text-theme-livid hover:bg-theme-bonjour">
             {policy.region} · {policy.policy_type}
           </Badge>
-          <button className="text-theme-venus hover:text-theme-pink transition-colors"
+          <button className="text-theme-venus hover:text-theme-pink transition-colors p-1"
             onClick={(e) => {
               e.stopPropagation(); 
               onToggle(policy.policy_id);
@@ -627,23 +619,185 @@ const PolicyCard = ({ policy, badge, onToggle, isDisabled }) => {
             <Heart className={`w-5 h-5 ${policy.isFavorite ? "fill-theme-pink text-theme-pink" : ""}`} />
           </button>
         </div>
-        <CardTitle className="text-lg mt-3 text-theme-black group-hover:text-theme-livid transition-colors">
+        <CardTitle className="text-lg mt-3 text-theme-black group-hover:text-theme-livid transition-colors line-clamp-1">
             {policy.policy_name}
         </CardTitle>
         {badge && <Badge className="mt-1 w-fit bg-theme-pink hover:bg-theme-pink">{badge}</Badge>}
       </CardHeader>
-      <CardContent>
-        <CardDescription className="line-clamp-2 h-10">
+      <CardContent className="flex-1">
+        <CardDescription className="line-clamp-2 min-h-[40px]">
           {policy.desc}
         </CardDescription>
       </CardContent>
       <CardFooter>
-        <Button variant="outline" className="w-full border-theme-venus/30 hover:bg-theme-bonjour hover:text-theme-livid" onClick={handleViewDetails}>
+        <Button variant="outline" className="w-full border-theme-venus/30 hover:bg-theme-bonjour hover:text-theme-livid" onClick={onDetail}>
           자세히 보기
         </Button>
       </CardFooter>
     </Card>
   );
 };
+
+// ★ [추가] 상세 보기(확대) 모달 컴포넌트
+// ★ [수정됨] 대형 사이즈 & 팝업 모션이 적용된 상세 모달
+const PolicyDetailModal = ({ policy, onClose, onToggle }) => {
+  
+  const handleGoToSite = () => {
+    if (policy.policy_url) {
+      window.open(policy.policy_url, "_blank", "noopener,noreferrer");
+    } else {
+      alert("링크 정보가 없습니다.");
+    }
+  };
+
+  return (
+    <>
+      {/* 1. 커스텀 애니메이션 정의 (Style 태그 삽입) */}
+      <style>{`
+        @keyframes spring-pop {
+          0% { transform: scale(0.8); opacity: 0; }
+          50% { transform: scale(1.02); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-spring-pop {
+          animation: spring-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+      `}</style>
+
+      {/* 2. 배경 (Backdrop) */}
+      <div 
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300"
+        onClick={onClose}
+      >
+        {/* 3. 모달 컨텐츠 (대형 사이즈 & 팝업 애니메이션 적용) */}
+        <div 
+          className="bg-white w-full max-w-6xl h-[85vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col relative animate-spring-pop"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* 닫기 버튼 */}
+          <button 
+            onClick={onClose}
+            className="absolute top-6 right-6 p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-black transition-colors z-20"
+          >
+            <X className="w-6 h-6" />
+          </button>
+
+          <div className="flex h-full flex-col md:flex-row">
+            
+            {/* [좌측] 헤더 및 요약 정보 (35% 너비) */}
+            <div className="w-full md:w-[35%] bg-theme-bonjour/30 p-8 flex flex-col border-r border-gray-100 overflow-y-auto custom-scrollbar">
+              
+              {/* 상단 뱃지 그룹 */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                 <Badge className="bg-theme-livid text-white px-3 py-1 text-sm rounded-md shadow-sm">
+                    {policy.category || "정책"}
+                 </Badge>
+                 <Badge variant="outline" className="border-theme-venus/50 text-theme-venus bg-white">
+                    {policy.region}
+                 </Badge>
+              </div>
+
+              {/* 제목 */}
+              <h2 className="text-3xl font-extrabold text-theme-black leading-tight mb-6 break-keep">
+                {policy.policy_name}
+              </h2>
+
+              {/* 즐겨찾기 버튼 (크게) */}
+              <div className="mb-8">
+                <button 
+                  className={`flex items-center justify-center w-full gap-2 py-3 rounded-xl border transition-all duration-200 
+                    ${policy.isFavorite 
+                      ? "bg-theme-pink/10 border-theme-pink text-theme-pink" 
+                      : "bg-white border-gray-200 text-gray-500 hover:border-theme-pink hover:text-theme-pink"
+                    }`}
+                  onClick={() => onToggle(policy.policy_id)}
+                >
+                  <Heart className={`w-5 h-5 ${policy.isFavorite ? "fill-theme-pink" : ""}`} />
+                  <span className="font-semibold">{policy.isFavorite ? "관심 정책에 저장됨" : "관심 정책으로 저장"}</span>
+                </button>
+              </div>
+
+              {/* 요약 카드 */}
+              <div className="space-y-4 mt-auto">
+                <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                   <span className="text-sm text-theme-venus font-bold uppercase tracking-wider block mb-2">지원 금액</span>
+                   <p className="text-2xl font-bold text-theme-livid">
+                      {policy.max_benefit_amount 
+                        ? `${(policy.max_benefit_amount / 10000).toLocaleString()}만원` 
+                        : "상세 내용 참조"}
+                      <span className="text-sm font-normal text-gray-500 ml-1">최대</span>
+                   </p>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                   <span className="text-sm text-theme-venus font-bold uppercase tracking-wider block mb-2">대상 주택</span>
+                   <p className="text-lg font-bold text-theme-black">
+                     {policy.max_house_price ? `${(policy.max_house_price / 100000000).toFixed(1)}억 이하` : "제한 없음"}
+                   </p>
+                </div>
+              </div>
+            </div>
+
+            {/* [우측] 상세 내용 (65% 너비) */}
+            <div className="w-full md:w-[65%] flex flex-col bg-white">
+              
+              {/* 스크롤 영역 */}
+              <div className="flex-1 p-8 md:p-10 overflow-y-auto custom-scrollbar space-y-10">
+                
+                {/* 1. 정책 소개 */}
+                <section>
+                  <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-theme-livid rounded-full"></span>
+                    어떤 정책인가요?
+                  </h3>
+                  <div className="text-gray-600 text-lg leading-8 whitespace-pre-wrap bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                    {policy.desc || "상세 설명이 제공되지 않았습니다."}
+                  </div>
+                </section>
+
+                {/* 2. 상세 조건 (테이블 형태) */}
+                <section>
+                  <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-theme-pink rounded-full"></span>
+                    누가 신청할 수 있나요?
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                     <DetailItem label="거주 지역" value={policy.region} />
+                     <DetailItem label="정책 유형" value={policy.policy_type} />
+                     <DetailItem label="최대 대출/지원 기간" value={policy.max_duration_year ? `${policy.max_duration_year}년` : "-"} />
+                     <DetailItem label="금리 수준" value={policy.min_rate ? `${policy.min_rate}% ~ ${policy.max_rate}%` : "-"} />
+                  </div>
+                </section>
+              </div>
+
+              {/* 하단 버튼 영역 (고정) */}
+              <div className="p-6 border-t border-gray-100 flex justify-end gap-3 bg-white/90 backdrop-blur-sm">
+                {/* <Button variant="ghost" onClick={onClose} size="lg" className="text-gray-500 hover:text-black text-lg">
+                  닫기
+                </Button> */}
+                <Button 
+                  onClick={handleGoToSite}
+                  size="lg"
+                  className="bg-theme-livid hover:bg-theme-livid/90 text-white px-8 text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
+                >
+                  신청하러 가기 <ExternalLink className="w-5 h-5 ml-2" />
+                </Button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+// [보조 컴포넌트] 상세 정보 아이템 (반복되는 디자인 통일)
+const DetailItem = ({ label, value }) => (
+  <div className="flex flex-col p-4 rounded-xl border border-gray-100 bg-white hover:border-theme-venus/30 transition-colors">
+    <span className="text-sm text-theme-venus mb-1">{label}</span>
+    <span className="text-lg font-medium text-theme-black">{value}</span>
+  </div>
+);
 
 export default MainPage;

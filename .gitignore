@@ -30,3 +30,5 @@ backend/policies.csv
 backend/rules.csv
 backend/Script.sql
 backend/test.py
+
+*.pem
