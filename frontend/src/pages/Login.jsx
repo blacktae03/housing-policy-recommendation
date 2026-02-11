@@ -78,10 +78,10 @@ const Login = () => {
 
   const handleKakaoLogin = () => {
   // 백엔드의 카카오 로그인 시작 주소로 이동
-    window.location.href = "http://172.21.68.186:8000/auth/kakao";
+    window.location.href = "https://jipsalddae.co.kr/auth/kakao";
   };
   const handleNaverLogin = () => {
-    window.location.href = "http://172.21.68.186:8000/auth/naver";
+    window.location.href = "https://jipsalddae.co.kr/auth/naver";
   };
 
 
