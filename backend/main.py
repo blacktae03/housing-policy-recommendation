@@ -19,9 +19,9 @@ load_dotenv()
 app = FastAPI()
 
 origins = [
-    "http://localhost:5173", # Vite 기본 포트
-    "http://127.0.0.1:5173", # 혹시 IP로 들어올 경우 대비
-    "http://172.21.178.20:5173"
+    "http://localhost:5173",
+    "https://jipsalddae.co.kr",        # 구매하신 도메인 (HTTPS 필수)
+    "https://www.jipsalddae.co.kr",    # www 포함 버전도 추가
 ]
 
 app.add_middleware(
@@ -34,7 +34,7 @@ app.add_middleware(
 
 app.add_middleware(
     SessionMiddleware,
-    secret_key="super-secret-key-must-be-changed",
+    secret_key="diunfansid33482nd9@#Nbd1!",
     https_only=False,      # 로컬은 http니까 False
     same_site="lax"        # lax로 두면 로컬에서도 쿠키 잘 먹습니다
 )
@@ -597,7 +597,7 @@ async def kakao_callback(code: str, request: Request):
 
             if "error" in token_json:
                 print(f"카카오 토큰 발급 실패: {token_json}")
-                return RedirectResponse("http://localhost:5173/login?error=kakao_failed")
+                return RedirectResponse("https://jipsalddae.co.kr/login?error=kakao_failed")
 
             access_token = token_json.get("access_token")
 
@@ -611,7 +611,7 @@ async def kakao_callback(code: str, request: Request):
         kakao_id = user_info.get("id")
         if not kakao_id:
             print(f"카카오 유저 정보 조회 실패: {user_info}")
-            return RedirectResponse("http://localhost:5173/login?error=kakao_failed")
+            return RedirectResponse("https://jipsalddae.co.kr/login?error=kakao_failed")
 
         # 카카오에서 준 정보 파싱
         kakao_id = str(user_info.get("id"))
@@ -637,12 +637,12 @@ async def kakao_callback(code: str, request: Request):
         request.session['has_info'] = user_data['has_info']
         
         # 5. 프론트엔드 메인페이지로 리다이렉트
-        return RedirectResponse("http://localhost:5173/main")
+        return RedirectResponse("https://jipsalddae.co.kr/main")
     
     except Exception as e:
         print(f"카카오 로그인 에러: {e}")
         # [추가] 예상치 못한 에러가 나도 로그인 페이지로 반송
-        return RedirectResponse("http://localhost:5173/login?error=server_error")
+        return RedirectResponse("https://jipsalddae.co.kr/login?error=server_error")
 
 @app.get("/auth/naver")
 def naver_login():
@@ -690,7 +690,7 @@ async def naver_callback(code: str, state: str, request: Request):
         if user_info_json.get("resultcode") != "00":
                 # [수정 전] raise HTTPException(...)
                 # [수정 후] 에러 꼬리표 달고 로그인 페이지로 반송
-            return RedirectResponse("http://localhost:5173/login?error=naver_failed")
+            return RedirectResponse("https://jipsalddae.co.kr/login?error=naver_failed")
 
         naver_account = user_info_json.get("response") # 여기를 잘 꺼내야 함!
         
@@ -715,12 +715,12 @@ async def naver_callback(code: str, state: str, request: Request):
         request.session['has_info'] = user_data['has_info']
         
         # 5. 메인으로 복귀
-        return RedirectResponse("http://localhost:5173/main")
+        return RedirectResponse("https://jipsalddae.co.kr/main")
     
     except Exception as e:
         print(f"네이버 로그인 에러: {e}")
         # [추가] 예상치 못한 에러가 나도 로그인 페이지로 반송
-        return RedirectResponse("http://localhost:5173/login?error=server_error")
+        return RedirectResponse("https://jipsalddae.co.kr/login?error=server_error")
     
 
 if __name__ == "__main__":
