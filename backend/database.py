@@ -3,6 +3,7 @@ from psycopg2.extras import RealDictCursor # 결과를 딕셔너리로 받기 �
 import os
 from dotenv import load_dotenv
 import bcrypt
+import pandas as pd
 
 # .env 파일에서 정보 읽어오기
 load_dotenv()
@@ -32,63 +33,140 @@ def test():
     conn.close()
     return result
 
+# policies is_first 추가
+# policies_output house_size 추가
+
 def init_db():
-    """서버 시작 시 필요한 모든 테이블을 자동으로 생성함"""
+    """서버 시작 시 DB 테이블을 자동 생성하고 기초 데이터를 입력함"""
     conn = get_db_connection()
     cursor = conn.cursor()
     
     try:
-        # 1. users 테이블 (UUID 사용 버전)
+        print("--- [DB 초기화 및 테이블 점검 시작] ---")
+        
+        # 1. 확장 기능 및 기본 테이블 생성
+        cursor.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')
+
+        # [부모] policies_output
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS policies_output (
+                policy_id INT PRIMARY KEY,
+                policy_name VARCHAR(255),
+                category VARCHAR(100),
+                policy_type VARCHAR(100),
+                max_house_price VARCHAR(255),
+                region VARCHAR(100),
+                max_benefit_amount BIGINT,
+                min_rate VARCHAR(50),
+                max_rate VARCHAR(50),
+                house_size VARCHAR(100),
+                max_duration_year VARCHAR(100),
+                policy_url TEXT,
+                "desc" TEXT
+            );
+        """)
+
+        # [자식] policies
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS policies (
+                id SERIAL PRIMARY KEY,
+                policy_id INT REFERENCES policies_output(policy_id) ON DELETE CASCADE,
+                policy_name VARCHAR(255),
+                income BIGINT,
+                req_newborn BOOLEAN,
+                req_newlywed BOOLEAN,
+                min_children INT,
+                min_age INT,
+                max_age INT,
+                house_owner_allowed BOOLEAN,
+                asset_limit BIGINT,
+                is_first BOOLEAN
+            );
+        """)
+
+        # Users 테이블
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
-                user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                username VARCHAR(50) UNIQUE NOT NULL,
+                user_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                username VARCHAR(255) UNIQUE NOT NULL,
                 password VARCHAR(255),
-                nickname VARCHAR(50),
-                provider VARCHAR(20),
-                social_id VARCHAR(100),
+                nickname VARCHAR(100),
+                provider VARCHAR(50),
+                social_id VARCHAR(255),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
 
-        # 2. user_info 테이블
+        # User_info 테이블
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS user_info (
                 info_id SERIAL PRIMARY KEY,
                 user_id UUID UNIQUE REFERENCES users(user_id) ON DELETE CASCADE,
                 birth_date DATE,
-                income INT,
-                asset INT,
-                is_house_owner BOOLEAN,
-                has_newborn BOOLEAN,
-                is_newlywed BOOLEAN,
-                child_count INT,
+                income BIGINT,
+                asset BIGINT,
+                is_house_owner BOOLEAN DEFAULT FALSE,
+                has_newborn BOOLEAN DEFAULT FALSE,
+                is_newlywed BOOLEAN DEFAULT FALSE,
+                child_count INT DEFAULT 0,
                 household_size INT,
                 dual_income BOOLEAN,
-                is_married BOOLEAN,
-                is_single_parent BOOLEAN,
-                is_disabled BOOLEAN,
-                is_multicultural BOOLEAN
+                is_married BOOLEAN DEFAULT FALSE,
+                is_single_parent BOOLEAN DEFAULT FALSE,
+                is_disabled BOOLEAN DEFAULT FALSE,
+                is_multicultural BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
 
-        # 3. favorites 테이블
+        # Favorites 테이블
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS favorites (
                 favorite_id SERIAL PRIMARY KEY,
                 user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
-                policy_id VARCHAR(50),
+                policy_id INT REFERENCES policies_output(policy_id) ON DELETE CASCADE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(user_id, policy_id)
             );
         """)
 
-        # 필요한 다른 테이블들(policies, region_code 등)도 같은 방식으로 추가하세요.
-        
         conn.commit()
-        print("✅ 모든 테이블이 확인/생성되었습니다.")
+        print("✅ 테이블 구조 확인 완료")
+
+        # 2. 기초 데이터 자동 입력 (데이터가 없을 때만 실행)
+        cursor.execute("SELECT COUNT(*) FROM policies_output;")
+        if cursor.fetchone()[0] == 0:
+            print("📦 정책 데이터 입력을 시작합니다...")
+            
+            # 파일 경로 (서버 환경에 맞춰 수정)
+            out_csv = '주택공급정책_출력.csv' 
+            cond_csv = '주택공급정책_조건.csv'
+
+            if os.path.exists(out_csv) and os.path.exists(cond_csv):
+                # 출력 데이터 입력
+                df_out = pd.read_csv(out_csv)
+                df_out = df_out.where(pd.notnull(df_out), None)
+                for _, row in df_out.iterrows():
+                    cursor.execute("""
+                        INSERT INTO policies_output VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """, tuple(row))
+
+                # 조건 데이터 입력 (이미 True/False로 변환됨)
+                df_cond = pd.read_csv(cond_csv)
+                df_cond = df_cond.where(pd.notnull(df_cond), None)
+                for _, row in df_cond.iterrows():
+                    cursor.execute("""
+                        INSERT INTO policies (policy_id, policy_name, income, req_newborn, req_newlywed, min_children, min_age, max_age, house_owner_allowed, asset_limit, is_first)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """, tuple(row))
+                
+                conn.commit()
+                print("✅ 정책 데이터 입력 성공!")
+            else:
+                print("⚠️ CSV 파일을 찾을 수 없습니다. 경로를 확인해주세요.")
+
     except Exception as e:
-        print(f"❌ 테이블 생성 에러: {e}")
+        print(f"❌ 에러 발생: {e}")
         conn.rollback()
     finally:
         cursor.close()

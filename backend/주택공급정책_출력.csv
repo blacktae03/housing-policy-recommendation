@@ -1,0 +1,36 @@
+policy_id,policy_name,category,policy_type,max_house_price,region,max_benefit_amount,min_rate,max_rate,house_size,max_duration_year,policy_url,desc
+1,통합공공임대주택,주택공급,공공임대,999999,전국,0,35,90,85,30,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyIntegratedPublicView.do#guide=RH112,소득 수준에 따라 시중 시세의 35~90% 수준의 임대료로 최장 30년까지 거주 가능한 공공임대주택입니다.
+2,매입임대주택,주택공급,공공임대,999999,전국,0,30,50,85,20,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyPurchaseRentalView.do#guide=MENU100,도심 내 기존 주택을 매입하여 청년에게 시세의 30~50% 수준으로 저렴하게 공급하는 임대주택입니다.
+3,전세임대주택,주택공급,공공임대,12000(보증금),전국,0,1,2,,,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyCharterRentalView.do#guide=RH107,청년이 원하는 주택을 선택하면 LH 등이 전세계약 후 저렴하게 재임대하는 주택입니다.
+4,행복주택,주택공급,공공임대,999999,전국,0,60 ,80,60,20,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyHappyView.do#guide=RH108,"시세의 60~80%로 공급하며, 대학생·청년 10년, 신혼부부(자녀유무에 따라 10~14년), 고령자·수급자 20년 거주 가능합니다."
+5,영구임대주택,주택공급,공공임대,999999,전국,0,30,30,40,50,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyContRentalView.do,생계·의료급여 수급자 등 사회적 약자의 주거안정을 위해 시중 시세의 30% 수준으로 최장 50년까지 거주 가능한 공공임대주택입니다.
+6,국민임대주택,주택공급,공공임대,999999,전국,0,60,80,60,30,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyNationalRentalView.do,무주택 저소득층의 주거안정을 위해 시중 시세의 60~80% 수준으로 최장 30년까지 거주 가능한 공공임대주택입니다.
+7,장기전세주택,주택공급,공공임대,999999,전국,0,80,80,85,20,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyLongCharterView.do,시중 전세시세의 80% 수준으로 최장 20년(2년 단위 재계약)까지 거주 가능한 공공임대주택입니다.
+8,공공지원민간임대주택,주택공급,민간임대,999999,전국,0,75,95,85,10,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyPublicSupPrivateView.do,"무주택자 우선공급, 시세 대비 95%(일반) 및 75%(특별공급) 수준으로 최장 10년 거주 가능한 민간임대주택입니다."
+9,공공분양주택,주택공급,공공분양,999999,전국,0,0,0,85,999,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyLttotView.do,소득이 낮은 무주택서민 및 정책적 배려가 필요한 사회계층의 주택마련을 위해 분양가상한금액 이하로 공급하는 분양주택입니다.
+10,신혼희망타운,주택공급,공공분양,999999,전국,0,0,0,60,999,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyHoneyMoonView.do,"신혼부부 특화형 공공주택으로 전량 신혼부부에게 공급하며, 어린이집·공동육아방 등 육아시설과 스마트홈 기술이 적용된 분양·임대 혼합 공급 단지입니다."
+11,신혼부부특별공급,주택공급,공공분양,999999,전국,0,0,0,85,999,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyHoneyMoonSpecialView.do,혼인기간 5년 이내 자녀가 있는 신혼부부에게 일반 청약 경쟁 없이 분양·임대주택을 우선 공급하는 특별공급 제도입니다.
+12,생애최초특별공급,주택공급,공공분양,999999,전국,0,0,0,85,999,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyFirstTimeSpecialView.do,생애 처음으로 주택을 구입하는 무주택세대구성원에게 일반 청약 경쟁 없이 국민주택을 우선 공급하는 특별공급 제도입니다.
+13,내집마련 디딤돌 대출,금융지원,주택구입자금 대출,999999,전국,32000,2.85,4.15,85,30,https://nhuf.molit.go.kr/FP/FP05/FP0503/FP05030101.jsp,정부지원 3대 서민 구입자금을 하나로 통합한 저금리 대출로 무주택 세대주를 지원합니다.
+14,신혼부부전용 구입자금,금융지원,주택구입자금 대출,60000,전국,40000,2.35,3.65,85,30,https://nhuf.molit.go.kr/FP/FP05/FP0503/FP05030601.jsp,주택을 구입하고자 하는 신혼부부에게 낮은 금리로 구입자금을 대출해 드리는 신혼부부 전용 상품입니다.
+15,신생아특례디딤돌대출,금융지원,주택구입자금 대출,999999,전국,50000,1.6,3.3,85,30,https://nhuf.molit.go.kr/FP/FP05/FP0503/FP05030801.jsp,저출산 극복을 위해 신생아 출산 가구에 주택 구입자금을 저금리로 대출해 주는 전용 상품입니다.
+16,청년주택디딤돌 대출,금융지원,주택구입자금 대출,60000,전국,999999,2.2,3.6,85,45,https://nhuf.molit.go.kr/FP/FP05/FP0503/FP05030901.jsp,청년 주택드림 청약통장 가입자가 주택 당첨시 연계하여 지원받는 청년 전용 주택구입자금 대출입니다.
+17,신혼희망타운전용 주택담보장기대출,금융지원,주택구입자금 대출,999999,전국,40000,1.3,1.6,60,30,https://nhuf.molit.go.kr/FP/FP05/FP0503/FP05030701.jsp,신혼희망타운 입주자에게 연 1.3% 고정금리로 최장 30년까지 집값의 70%까지 지원하는 대출입니다.
+18,버팀목전세대출(전월세 보증금 대출),금융지원,주택전·월세자금 대출,30000(보증금),전국,12000,2.1,2.9,85,10,https://nhuf.molit.go.kr/FP/FP05/FP0502/FP05020101.jsp,근로자 및 서민의 주거안정을 위해 전세자금을 저금리로 대출해 주는 주택도시기금의 대표 상품입니다.
+19,청년전용 버팀목전세자금,금융지원,주택전·월세자금 대출,30000(보증금),전국,20000,1.8,2.7,85,10,https://nhuf.molit.go.kr/FP/FP05/FP0502/FP05020301.jsp,전세자금이 부족한 청년들에게 저금리로 전세자금을 대출해 주는 청년 전용 주택도시기금 상품입니다.
+20,청년전용 보증부월세대출,금융지원,주택전·월세자금 대출,6500(보증금),전국,5700,1,1.3,60,10,https://nhuf.molit.go.kr/FP/FP05/FP0502/FP05020701.jsp,"보증금(최대 4,500만원)과 월세금(최대 1,200만원)을 동시에 지원하여 청년층의 주거비 부담을 덜어주는 상품입니다."
+21,신혼부부전용 전세대출,금융지원,주택전·월세자금 대출,40000(보증금),전국,30000,1.5,2.7,85,10,https://nhuf.molit.go.kr/FP/FP05/FP0502/FP05020401.jsp,전세자금이 부족한 신혼부부에게 낮은 금리로 전세자금을 대출해 주는 신혼부부 전용 상품입니다.
+22,신생아특례버팀목대출,금융지원,주택전·월세자금 대출,50000(보증금),전국,30000,1.1,3,85,10,https://nhuf.molit.go.kr/FP/FP05/FP0502/FP05021401.jsp,저출산 극복을 위해 신생아 출산 가구에 전세자금을 저금리로 대출해 주는 전용 상품입니다.
+23,주거취약계층 이주지원 버팀목전세자금,금융지원,주택전·월세자금 대출,20000(보증금),전국,10000,1.2,1.8,85,10,https://nhuf.molit.go.kr/FP/FP05/FP0502/FP05021301.jsp,최저주거기준에 미달하는 곳에 거주하는 주거취약계층의 주거 이전을 위해 저금리로 전세자금을 지원하는 상품입니다.
+24,청년 주택드림 청약통장 상품,금융지원,금융연계 지원,999999,전국,5000,2.3,4.5,무관,10,https://nhuf.molit.go.kr/FP/FP07/FP0701/FP07010301.jsp,2년 이상 가입 시 무주택 기간(최대 10년)에 한해 높은 우대 이율을 제공하는 청년 전용 청약통장입니다.
+25,보증료 할인,금융지원,금융연계 지원,999999,전국,40,무관,무관,무관,무관,https://www.khug.or.kr/hug/web/ig/dr/igdr000001.jsp,전세보증금 반환보증 가입자가 납부한 보증료를 최대 40만 원까지 환급하여 임차인의 주거비를 지원하는 사업입니다.
+26,청년 보증료지원,금융지원,금융연계 지원,30000(보증금),전국,30,무관,무관,무관,무관,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyGuaranteeFeeSupView.do#guide=HF215,전세사기 예방을 위해 청년 및 신혼부부 등이 납부한 전세보증금 반환보증 보증료를 최대 30만 원까지 지원합니다.
+27,주거급여,주거비지원,현금급여,999999,전국,49,0,0,999,999,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyHousingView.do,소득인정액이 기준 중위소득 48% 이하 가구에 임차료(기준임대료) 또는 주택 수선비를 지원하는 복지 제도입니다.
+28,청년가구지원,주거비지원,현금급여,999999,전국,37,0,0,999,999,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyYouthHousingView.do,주거급여 수급가구 내 부모와 분리거주하는 만 19~29세 미혼 청년에게 1인 가구 기준임대료를 별도 지급하는 제도입니다.
+29,청년월세특별지원,주거비지원,현금급여,999999,전국,20,0,0,999,12,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyYouthMonthlySupView.do,경제적 어려움을 겪는 19~34세 독립거주 청년에게 실제 월세를 월 최대 20만원씩 최대 12개월간 지원하는 제도입니다.
+30,비정상거처이사비지원,주거비지원,현금급여,999999,전국,40,0,0,999,1,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyExpensesSupView.do,쪽방·반지하 등 비정상거처에서 공공·민간임대주택으로 이주하는 무주택 취약계층에게 이사비·생필품 비용 40만원을 1회 지원하는 제도입니다.
+31,자립준비청년(건설임대),기타지원,공공임대,999999,전국,0,0,0,85,50,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyProtectEndChildView.do,아동복지시설 퇴소 후 5년 이내 청년에게 영구·국민·행복주택 등 건설임대주택을 보증금 100만원으로 최장 50년까지 지원하는 제도입니다.
+32,자립준비청년(매입임대),기타지원,공공임대,999999,전국,0,40,40,85,20,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyProtectEndChildView.do,"아동복지시설 퇴소 후 5년 이내 청년에게 도심 내 매입임대주택을 보증금 100만원, 시세 40% 수준으로 최장 20년까지 지원하는 제도입니다."
+33,자립준비청년(전세임대),기타지원,공공임대,999999,전국,0,0,0,85,30,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyProtectEndChildView.do,아동복지시설 퇴소 후 5년 이내 청년에게 LH가 전세계약을 체결하고 보증금 100만원으로 재임대하는 전세임대주택을 최장 30년까지 지원하는 제도입니다.
+34,긴급주거지원,기타지원,현금급여,999999,전국,67,0,0,999,999,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyEmergencyHousSupView.do,위기상황(사망·가출·질병·가정폭력·화재 등) 발생 시 임시거소 또는 주거비를 긴급 지원하는 제도입니다.
+35,주거취약계층주거지원,기타지원,공공임대,999999,전국,0,0,0,999,20,https://www.myhome.go.kr/hws/portal/cont/selectYouthPolicyHousWeakSupView.do,"쪽방·고시원 등 비정상거처 거주자, 범죄피해자, 최저주거기준 미달 아동가구에게 매입·전세·국민임대주택을 보증금 50만원으로 최장 20년간 지원하는 제도입니다."

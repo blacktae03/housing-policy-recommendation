@@ -32,3 +32,5 @@ backend/Script.sql
 backend/test.py
 
 *.pem
+
+*.sql

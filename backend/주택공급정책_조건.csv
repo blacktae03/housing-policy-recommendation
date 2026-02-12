@@ -1,0 +1,103 @@
+policy_id,policy_name,income,req_newborn,req_newlywed,min_children,min_age,max_age,house_owner_allowed,asset_limit,is_first
+1,통합공공임대주택,4884,false,false,0,18,39,false,33700,false
+1,통합공공임대주택,8335,false,false,0,18,39,false,33700,false
+1,통합공공임대주택,11104,false,false,0,18,39,false,33700,false
+2,매입임대주택,0,false,false,0,18,39,false,0,false
+2,매입임대주택,5472,false,false,0,18,39,false,23700,false
+2,매입임대주택,10944,false,false,0,18,39,false,23700,false
+3,전세임대주택,0,false,false,0,18,39,false,0,false
+3,전세임대주택,5472,false,false,0,18,39,false,23700,false
+3,전세임대주택,5472,false,false,0,18,39,false,23700,false
+4,행복주택,5188,false,false,0,0,99,false,10400,false
+4,행복주택,5188,false,false,0,19,39,false,25400,false
+4,행복주택,9169,false,false,0,19,39,false,25400,false
+4,행복주택,9169,false,true,0,0,99,false,33700,false
+4,행복주택,10944,false,true,0,0,99,false,33700,false
+4,행복주택,9169,false,false,1,0,99,false,33700,false
+4,행복주택,9169,false,false,0,65,99,false,33700,false
+4,행복주택,999999,false,false,0,0,99,false,33700,false
+5,영구임대주택,3886,false,false,0,19,999,false,33700,false
+5,영구임대주택,5258,false,false,0,19,999,false,33700,false
+6,국민임대주택,3886,false,false,0,19,999,false,33700,false
+6,국민임대주택,5258,false,false,0,19,999,false,33700,false
+6,국민임대주택,5960,false,false,0,19,999,false,33700,false
+6,국민임대주택,6706,false,false,0,19,999,false,33700,false
+7,장기전세주택,5181,false,false,0,19,999,false,21550,false
+7,장기전세주택,7230,false,false,0,19,999,false,21550,false
+7,장기전세주택,9152,false,false,0,19,999,false,21550,false
+7,장기전세주택,6218,false,false,0,19,999,false,21550,false
+7,장기전세주택,8676,false,false,0,19,999,false,21550,false
+7,장기전세주택,10983,false,false,0,19,999,false,21550,false
+8,공공지원민간임대주택,999999,false,false,0,19,999,true,999999,false
+8,공공지원민간임대주택,10983,false,false,0,19,39,false,999999,false
+8,공공지원민간임대주택,10983,false,true,0,19,999,false,999999,false
+8,공공지원민간임대주택,10983,false,false,0,65,999,false,999999,false
+9,공공분양주택,12820,false,false,0,19,39,false,27000,false
+9,공공분양주택,11902,false,true,0,19,999,false,21550,false
+9,공공분양주택,12820,true,false,0,19,999,false,35400,false
+9,공공분양주택,10983,false,false,3,19,999,false,21550,false
+9,공공분양주택,11902,false,false,0,19,999,false,21550,true
+9,공공분양주택,9152,false,false,0,19,999,false,21550,false
+10,신혼희망타운,11902,false,true,0,19,999,false,35400,false
+10,신혼희망타운,12820,false,true,0,19,999,false,35400,false
+11,신혼부부특별공급,9152,false,true,1,19,999,false,999999,false
+11,신혼부부특별공급,10983,false,true,1,19,999,false,999999,false
+12,생애최초특별공급,9152,false,false,0,19,999,false,999999,true
+13,내집마련 디딤돌 대출,6000,false,false,0,19,999,false,51100,false
+13,내집마련 디딤돌 대출,7000,false,false,2,19,999,false,51100,false
+13,내집마련 디딤돌 대출,7000,false,false,0,19,999,false,51100,true
+13,내집마련 디딤돌 대출,8500,false,true,0,19,999,false,51100,false
+14,신혼부부전용 구입자금,8500,false,true,0,19,999,false,51100,false
+14,신혼부부전용 구입자금,8500,false,true,1,19,999,false,51100,false
+14,신혼부부전용 구입자금,8500,false,true,2,19,999,false,51100,false
+15,신생아특례디딤돌대출,13000,true,false,1,19,999,true,51100,false
+15,신생아특례디딤돌대출,20000,true,false,1,19,999,true,51100,false
+16,청년주택디딤돌 대출,7000,false,false,0,19,39,false,51100,true
+16,청년주택디딤돌 대출,10000,false,true,0,19,39,false,51100,true
+17,신혼희망타운전용 주택담보장기대출,999999,false,true,0,19,999,false,999999,false
+18,버팀목전세대출(전월세 보증금 대출),5000,false,false,0,19,999,false,34500,false
+18,버팀목전세대출(전월세 보증금 대출),5000,false,false,0,19,999,false,34500,false
+18,버팀목전세대출(전월세 보증금 대출),6000,false,false,2,19,999,false,34500,false
+18,버팀목전세대출(전월세 보증금 대출),6000,false,false,2,19,999,false,34500,false
+18,버팀목전세대출(전월세 보증금 대출),7500,false,true,0,19,999,false,34500,false
+18,버팀목전세대출(전월세 보증금 대출),7500,false,true,0,19,999,false,34500,false
+19,청년전용 버팀목전세자금,5000,false,false,0,19,34,false,34500,false
+19,청년전용 버팀목전세자금,6000,false,false,2,19,34,false,34500,false
+19,청년전용 버팀목전세자금,7500,false,true,0,19,34,false,34500,false
+20,청년전용 보증부월세대출,5000,false,false,0,19,34,false,34500,false
+21,신혼부부전용 전세대출,7500,false,true,0,19,999,false,34500,false
+21,신혼부부전용 전세대출,7500,false,true,0,19,999,false,34500,false
+22,신생아특례버팀목대출,13000,true,false,1,19,999,false,34500,false
+22,신생아특례버팀목대출,13000,true,false,1,19,999,false,34500,false
+22,신생아특례버팀목대출,20000,true,false,1,19,999,false,34500,false
+22,신생아특례버팀목대출,20000,true,false,1,19,999,false,34500,false
+23,주거취약계층 이주지원 버팀목전세자금,5000,false,false,0,19,999,false,34500,false
+23,주거취약계층 이주지원 버팀목전세자금,5000,false,false,0,19,999,false,34500,false
+24,청년 주택드림 청약통장 상품,5000,false,false,0,19,34,false,999999,false
+25,보증료 할인,4000,false,false,0,19,34,false,999999,false
+25,보증료 할인,5000,false,false,0,19,34,false,999999,false
+26,청년 보증료지원,5000,false,false,0,19,34,false,999999,false
+26,청년 보증료지원,5000,false,false,0,19,45,false,999999,false
+26,청년 보증료지원,5000,false,false,0,19,39,false,999999,false
+26,청년 보증료지원,7000,false,true,0,19,34,false,999999,false
+26,청년 보증료지원,7000,false,true,0,19,45,false,999999,false
+26,청년 보증료지원,7000,false,true,0,19,39,false,999999,false
+27,주거급여,2895,false,false,0,0,999,true,999999,false
+27,주거급여,2895,false,false,0,0,999,true,999999,false
+27,주거급여,2895,false,false,0,0,999,true,999999,false
+27,주거급여,2895,false,false,0,0,999,true,999999,false
+28,청년가구지원,2895,false,false,0,19,29,false,999999,false
+28,청년가구지원,2895,false,false,0,19,29,false,999999,false
+28,청년가구지원,2895,false,false,0,19,29,false,999999,false
+28,청년가구지원,2895,false,false,0,19,29,false,999999,false
+29,청년월세특별지원,1843,false,false,0,19,34,false,12200,false
+30,비정상거처이사비지원,999999,false,false,0,0,999,false,999999,false
+31,자립준비청년(건설임대),9152,false,false,0,18,999,false,33700,false
+32,자립준비청년(매입임대),9610,false,false,0,18,999,false,23700,false
+33,자립준비청년(전세임대),999999,false,false,0,18,999,false,999999,false
+34,긴급주거지원,4243,false,false,0,0,999,true,31000,false
+34,긴급주거지원,4243,false,false,0,0,999,true,19400,false
+34,긴급주거지원,4243,false,false,0,0,999,true,16500,false
+35,주거취약계층주거지원,2090,false,false,0,0,999,false,24100,false
+35,주거취약계층주거지원,3249,false,false,0,0,999,false,24100,false
+35,주거취약계층주거지원,4319,false,false,0,0,999,false,24100,false
