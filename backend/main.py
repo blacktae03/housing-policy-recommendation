@@ -18,11 +18,11 @@ import sys
 
 load_dotenv()
 
-try:
-    init_db()
-except Exception as e:
-    print(f"DB 초기화 실패로 서버를 시작할 수 없습니다: {e}")
-    sys.exit(1) # 필요하면 주석 해제 (에러나면 아예 서버 안 켜지게 함)
+# try:
+#     init_db()
+# except Exception as e:
+#     print(f"DB 초기화 실패로 서버를 시작할 수 없습니다: {e}")
+#     sys.exit(1) # 필요하면 주석 해제 (에러나면 아예 서버 안 켜지게 함)
 
 app = FastAPI()
 
