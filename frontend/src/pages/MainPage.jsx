@@ -16,13 +16,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-// [수정] X 아이콘 (닫기 버튼용) 및 ExternalLink 아이콘 추가
-import { Home, User, LogOut, Heart, Search, ChevronLeft, ChevronRight, X, ExternalLink } from "lucide-react";
+// [수정] X 아이콘, ExternalLink, 화살표 아이콘 추가
+import { Home, User, LogOut, Heart, Search, ChevronLeft, ChevronRight, X, ExternalLink, ArrowUp, ArrowDown } from "lucide-react";
 import api from "@/api/axios";
 import logoImg from "@/assets/logo.png";
 
 // ★ 한 페이지에 보여줄 아이템 개수 상수 선언
 const ITEMS_PER_PAGE = 6;
+
+// [추가] 카테고리별 정책 유형 매핑 객체
+const POLICY_TYPE_MAP = {
+  "모두": ["모두"],
+  "주택공급": ["모두", "공공임대", "민간임대", "공공분양"],
+  "금융지원": ["모두", "주택구입자금 대출", "주택전·월세자금 대출", "금융연계 지원"],
+  "주거비지원": ["모두", "현금급여"],
+  "기타지원": ["모두", "현금급여", "공공임대"],
+};
 
 const MainPage = () => {
   const navigate = useNavigate();
@@ -31,19 +40,29 @@ const MainPage = () => {
   const [userInfo, setUserInfo] = useState({
     nickname: "",
     has_info: false,
-    favorite_policies: []
   });
 
-  const [activeTab, setActiveTab] = useState("all");
+  // 원본 데이터 (API에서 받은 후 변경되지 않음)
+  const [rawAllPolicies, setRawAllPolicies] = useState([]);
+  const [rawFilteredPolicies, setRawFilteredPolicies] = useState([]);
 
-  // 정책 데이터
+  // 화면에 표시될 데이터 (필터링/정렬 후)
   const [allPolicies, setAllPolicies] = useState([]);
   const [filteredPolicies, setFilteredPolicies] = useState([]);
   
-  // ★ [추가] 탭별 페이지 상태 관리
-  const [pageAll, setPageAll] = useState(1);       // 전체 탭 페이지
-  const [pageCustom, setPageCustom] = useState(1); // 맞춤 탭 페이지
-  const [pageFav, setPageFav] = useState(1);       // 즐겨찾기 탭 페이지
+  const [activeTab, setActiveTab] = useState("all");
+  
+  // 페이지네이션 상태
+  const [pageAll, setPageAll] = useState(1);
+  const [pageCustom, setPageCustom] = useState(1);
+  const [pageFav, setPageFav] = useState(1);
+
+  // [추가] 필터링 및 정렬 상태
+  const [sortType, setSortType] = useState("popular"); // 'popular' or 'alpha'
+  const [sortOrder, setSortOrder] = useState("desc"); // 'asc' or 'desc'
+  const [selectedCategory, setSelectedCategory] = useState("모두");
+  const [selectedPolicyType, setSelectedPolicyType] = useState("모두");
+  const [policyTypeOptions, setPolicyTypeOptions] = useState(["모두"]);
 
   // 지역 및 아파트 데이터
   const [allSido, setAllSido] = useState([]);
@@ -58,15 +77,12 @@ const MainPage = () => {
   const [isAptListOpen, setIsAptListOpen] = useState(false); 
   const [focusIndex, setFocusIndex] = useState(-1); 
 
-  // 로딩 변수
+  // 로딩 및 모달 상태
   const [loading, setLoading] = useState(true);
-  
-  // 알림창 열림/닫힘 상태 관리
   const [isAlertOpen, setIsAlertOpen] = useState(false);
-
-  // ★ [추가] 상세 보기(확대) 모달을 위한 상태
   const [selectedPolicy, setSelectedPolicy] = useState(null);
 
+  // 데이터 최초 로딩
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -81,25 +97,28 @@ const MainPage = () => {
         
         const processedAllPolicies = allPolicyRes.data.map((item) => ({
           ...item,
-          isFavorite: myFavoriteIds.includes(item.policy_id)
+          isFavorite: myFavoriteIds.includes(item.policy_id),
+          visit_count: item.visit_count || 0, // visit_count가 null일 경우 0으로 초기화
         }));
   
+        // 원본 데이터와 화면 표시용 데이터 모두 초기화
+        setRawAllPolicies(processedAllPolicies);
         setAllPolicies(processedAllPolicies);
+
         setUserInfo({
           nickname: userInfoRes.data.nickname,
           has_info: userInfoRes.data.has_info,
-          favorite_policies: myFavoriteIds
         });
         setAllSido(allSidoRes.data);
 
         if (userInfoRes.data.has_info === true) {
           const allUserRes = await api.get("/policies/recommended");
-
           const processedFilteredPolicies = allUserRes.data.policies.map((item) => ({
             ...item,
-            isFavorite: myFavoriteIds.includes(item.policy_id)
+            isFavorite: myFavoriteIds.includes(item.policy_id),
+            visit_count: item.visit_count || 0,
           }));
-
+          setRawFilteredPolicies(processedFilteredPolicies);
           setFilteredPolicies(processedFilteredPolicies);
         }
   
@@ -112,8 +131,14 @@ const MainPage = () => {
 
     fetchData();
   }, []);
+  
+  // [추가] 카테고리 변경 시 정책 유형 옵션 업데이트
+  useEffect(() => {
+    setPolicyTypeOptions(POLICY_TYPE_MAP[selectedCategory] || ["모두"]);
+    setSelectedPolicyType("모두"); // 카테고리 바뀌면 유형은 '모두'로 리셋
+  }, [selectedCategory]);
 
-  // ... (아파트 검색 관련 useEffect 등 기존 코드 유지)
+  // 아파트 검색 관련 useEffect 등 기존 코드 유지
   useEffect(() => {
     const fetchApartments = async () => {
       if (selectedSido && selectedSigungu) {
@@ -139,7 +164,7 @@ const MainPage = () => {
     fetchApartments();
   }, [selectedSido, selectedSigungu]);
 
-  // ... (핸들러 함수들 기존 유지)
+  // 핸들러 함수들
   const handleAptSearchChange = (e) => {
     const value = e.target.value;
     setAptSearchTerm(value);
@@ -193,29 +218,17 @@ const MainPage = () => {
   };
 
   const handleToggleFavorite = async (policyId) => {
-    setAllPolicies((prev) => 
-      prev.map((policy) => 
-        policy.policy_id === policyId 
-          ? { ...policy, isFavorite: !policy.isFavorite } 
-          : policy 
-      )
-    );
-    setFilteredPolicies((prev) => 
-      prev.map((policy) => 
-        policy.policy_id === policyId 
-          ? { ...policy, isFavorite: !policy.isFavorite } 
-          : policy
-      )
-    );
+    const toggle = (policies) => policies.map(p => p.policy_id === policyId ? { ...p, isFavorite: !p.isFavorite } : p);
+    setAllPolicies(toggle);
+    setFilteredPolicies(toggle);
+    setRawAllPolicies(toggle); // 원본 데이터도 동기화
+    setRawFilteredPolicies(toggle);
 
     if (selectedPolicy && selectedPolicy.policy_id === policyId) {
-    setSelectedPolicy((prev) => ({
-      ...prev,
-      isFavorite: !prev.isFavorite // 현재 모달의 상태도 뒤집어줌 -> 즉시 색상 변경됨
-    }));
-  }
+      setSelectedPolicy((prev) => ({ ...prev, isFavorite: !prev.isFavorite }));
+    }
 
-    await api.post(`/favorites/${policyId}`)
+    await api.post(`/favorites/${policyId}`);
   };
 
   const fetchSigunguList = async (sido) => {
@@ -256,18 +269,11 @@ const MainPage = () => {
         const isPriceMatch = !policy.max_house_price || aptData <= policy.max_house_price;
         return isRegionMatch && isPriceMatch;
       };
-      setAllPolicies((prevPolicies) => 
-        prevPolicies.map((policy) => ({
-          ...policy,
-          isDisabled: !checkIsActive(policy) 
-        }))
-      );
-      setFilteredPolicies((prevPolicies) => 
-        prevPolicies.map((policy) => ({
-          ...policy,
-          isDisabled: !checkIsActive(policy)
-        }))
-      );
+
+      const updateDisabled = (policies) => policies.map(p => ({ ...p, isDisabled: !checkIsActive(p) }));
+      setAllPolicies(updateDisabled);
+      setFilteredPolicies(updateDisabled);
+      
       setPageAll(1);
       setPageCustom(1);
       setPageFav(1);
@@ -278,22 +284,59 @@ const MainPage = () => {
       setLoading(false); 
     }
   };
-  
-  // ★ [추가] 모달 열기 핸들러 (PolicyCard에서 호출됨)
+
   const handleOpenDetail = (policy) => {
-    // ★ [추가] 모달을 열 때 조회수(visit_count)를 1 늘리는 API를 호출합니다.
-    // 이 작업은 백그라운드에서 조용히 실행되며, 실패해도 UI에 영향을 주지 않습니다.
     try {
       api.post(`/policies/${policy.policy_id}/visit`);
+      // visit_count를 프론트엔드에서도 즉시 반영
+      const incrementVisitCount = (policies) => policies.map(p => p.policy_id === policy.policy_id ? {...p, visit_count: (p.visit_count || 0) + 1} : p);
+      setAllPolicies(incrementVisitCount);
+      setFilteredPolicies(incrementVisitCount);
+      setRawAllPolicies(incrementVisitCount);
+      setRawFilteredPolicies(incrementVisitCount);
     } catch (error) {
       console.error("조회수 업데이트 실패:", error);
     }
     setSelectedPolicy(policy);
   };
 
-  // ★ [추가] 모달 닫기 핸들러
   const handleCloseDetail = () => {
     setSelectedPolicy(null);
+  };
+
+  // [추가] 검색 버튼 핸들러
+  const handleSearch = () => {
+    const process = (source) => {
+      let result = [...source];
+
+      // 1. 필터링
+      if (selectedCategory !== "모두") {
+        result = result.filter(p => p.category === selectedCategory);
+      }
+      if (selectedPolicyType !== "모두") {
+        result = result.filter(p => p.policy_type === selectedPolicyType);
+      }
+
+      // 2. 정렬
+      result.sort((a, b) => {
+        if (sortType === 'popular') {
+          return sortOrder === 'asc' ? (a.visit_count || 0) - (b.visit_count || 0) : (b.visit_count || 0) - (a.visit_count || 0);
+        }
+        if (sortType === 'alpha') {
+          return sortOrder === 'asc' ? a.policy_name.localeCompare(b.policy_name) : b.policy_name.localeCompare(a.policy_name);
+        }
+        return 0;
+      });
+      
+      return result;
+    };
+
+    setAllPolicies(process(rawAllPolicies));
+    setFilteredPolicies(process(rawFilteredPolicies));
+
+    // 검색 후 첫 페이지로 이동
+    setPageAll(1);
+    setPageCustom(1);
   };
 
   if (loading) {
@@ -306,7 +349,7 @@ const MainPage = () => {
     return data.slice(startIndex, endIndex);
   };
 
-  const favoritePolicies = allPolicies.filter(p => p.isFavorite);
+  const favoritePolicies = rawAllPolicies.filter(p => p.isFavorite);
 
   return (
     <div className="min-h-screen w-full bg-theme-bonjour font-sans flex flex-col relative">
@@ -418,393 +461,460 @@ const MainPage = () => {
                   검색
                 </Button>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 탭 영역 */}
-        <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
-          <TabsList className="grid w-full md:w-[400px] grid-cols-3 bg-theme-venus/10 p-1 rounded-xl mb-6">
-            <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:text-theme-livid data-[state=active]:shadow-sm rounded-lg">전체</TabsTrigger>
-            <TabsTrigger value="custom" className="data-[state=active]:bg-white data-[state=active]:text-theme-pink data-[state=active]:shadow-sm rounded-lg">맞춤 정책</TabsTrigger>
-            <TabsTrigger value="favorites" className="data-[state=active]:bg-white data-[state=active]:text-theme-livid data-[state=active]:shadow-sm rounded-lg">즐겨찾기</TabsTrigger>
-          </TabsList>
-
-          {/* 1. 전체 탭 */}
-          <TabsContent value="all" className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[460px] content-start">
-              {getPagedData(allPolicies, pageAll).map((policy) => (
-                <PolicyCard 
-                  key={policy.policy_id} 
-                  policy={policy} 
-                  onToggle={handleToggleFavorite} 
-                  isDisabled={policy.isDisabled}
-                  // ★ [수정] 상세보기 핸들러 전달
-                  onDetail={() => handleOpenDetail(policy)}
-                />
-              ))}
-            </div>
-            <PaginationControl 
-              totalItems={allPolicies.length} 
-              currentPage={pageAll} 
-              onPageChange={setPageAll} 
-            />
-          </TabsContent>
-
-          {/* 2. 맞춤 정책 탭 */}
-          <TabsContent value="custom" className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-            {userInfo.has_info ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[460px] content-start">
-                   {getPagedData(filteredPolicies, pageCustom).map((policy) => (
-                      <PolicyCard 
-                        key={policy.policy_id} 
-                        policy={policy} 
-                        badge="추천" 
-                        onToggle={handleToggleFavorite} 
-                        isDisabled={policy.isDisabled}
-                        onDetail={() => handleOpenDetail(policy)}
-                      />
-                    ))}
-                </div>
-                <PaginationControl 
-                  totalItems={filteredPolicies.length} 
-                  currentPage={pageCustom} 
-                  onPageChange={setPageCustom} 
-                />
-              </>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed border-theme-venus min-h-[400px]">
-                <div className="p-4 bg-theme-bonjour rounded-full mb-4">
-                  <User className="w-10 h-10 text-theme-venus" />
-                </div>
-                <h3 className="text-xl font-bold text-theme-black mb-2">나에게 딱 맞는 정책을 찾고 싶다면?</h3>
-                <p className="text-theme-venus mb-6">간단한 정보를 입력하고 맞춤 추천을 받아보세요.</p>
-                <Button onClick={() => navigate("/user-info")} className="bg-theme-pink hover:bg-theme-pink/90 text-white px-8">
-                  내 정보 입력하러 가기
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-
-          {/* 3. 즐겨찾기 탭 */}
-          <TabsContent value="favorites" className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[460px] content-start">
-              {getPagedData(favoritePolicies, pageFav).map((policy) => (
-                <PolicyCard 
-                  key={policy.policy_id} 
-                  policy={policy} 
-                  onToggle={handleToggleFavorite} 
-                  isDisabled={policy.isDisabled}
-                  onDetail={() => handleOpenDetail(policy)}
-                />
-              ))}
-              
-              {favoritePolicies.length === 0 && (
-                <div className="col-span-full flex justify-center items-center h-full text-theme-venus">
-                   <div>아직 즐겨찾기한 정책이 없어요. <Heart className="inline w-4 h-4"/>를 눌러보세요!</div>
-                </div>
-              )}
-            </div>
-            {favoritePolicies.length > 0 && (
-              <PaginationControl 
-                totalItems={favoritePolicies.length} 
-                currentPage={pageFav} 
-                onPageChange={setPageFav} 
-              />
-            )}
-          </TabsContent>
-        </Tabs>
-      </main>
-
-      {/* 알림 다이얼로그 (기존 코드) */}
-      <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-        <AlertDialogContent className="bg-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-theme-black">알림</AlertDialogTitle>
-            <AlertDialogDescription className="text-theme-venus text-base">
-              등록된 정보가 없습니다.<br/>
-              정보를 입력하시겠습니까?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="border-theme-venus/30 text-theme-venus hover:text-theme-black hover:bg-theme-bonjour">
-              아니요
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={() => navigate("/user-info")}
-              className="bg-theme-livid hover:bg-theme-livid/90 text-white"
-            >
-              예
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* ★ [추가] 상세 보기(확대) 모달 컴포넌트 렌더링 */}
-      {selectedPolicy && (
-        <PolicyDetailModal 
-          policy={selectedPolicy} 
-          onClose={handleCloseDetail} 
-          onToggle={handleToggleFavorite}
-        />
-      )}
-
-    </div>
-  );
-};
-
-/* -------------------------------------------------------------------------- */
-/* 서브 컴포넌트                                 */
-/* -------------------------------------------------------------------------- */
-
-// 1. 페이지네이션 컴포넌트
-const PaginationControl = ({ totalItems, currentPage, onPageChange }) => {
-  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
-  if (totalPages <= 1) return null;
-
-  return (
-    <div className="flex justify-center items-center gap-2 mt-8 py-4">
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-        disabled={currentPage === 1}
-        className="h-8 w-8 text-theme-venus hover:text-theme-livid hover:bg-transparent"
-      >
-        <ChevronLeft className="h-6 w-6" />
-      </Button>
-      <div className="flex gap-1">
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-          <Button
-            key={pageNum}
-            variant={currentPage === pageNum ? "default" : "ghost"}
-            size="sm"
-            onClick={() => onPageChange(pageNum)}
-            className={`w-8 h-8 p-0 font-normal ${
-              currentPage === pageNum 
-                ? "bg-theme-livid text-white hover:bg-theme-livid/90 shadow-md" 
-                : "text-theme-venus hover:text-theme-black hover:bg-theme-bonjour/50"
-            }`}
-          >
-            {pageNum}
-          </Button>
-        ))}
-      </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-        disabled={currentPage === totalPages}
-        className="h-8 w-8 text-theme-venus hover:text-theme-livid hover:bg-transparent"
-      >
-        <ChevronRight className="h-6 w-6" />
-      </Button>
-    </div>
-  );
-};
-
-// 2. 정책 카드 컴포넌트 (수정됨: onDetail prop 사용)
-const PolicyCard = ({ policy, badge, onToggle, isDisabled, onDetail }) => {
-  return (
-    <Card className={`hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-theme-venus/30 group flex flex-col h-full
-    ${isDisabled 
-          ? "opacity-50 grayscale bg-gray-100 pointer-events-none" 
-          : "bg-white hover:shadow-xl hover:-translate-y-1" 
-        }`}>
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
-          <Badge variant="secondary" className="bg-theme-bonjour text-theme-livid hover:bg-theme-bonjour">
-            {policy.region} · {policy.policy_type}
-          </Badge>
-          <button className="text-theme-venus hover:text-theme-pink transition-colors p-1"
-            onClick={(e) => {
-              e.stopPropagation(); 
-              onToggle(policy.policy_id);
-            }}
-          >
-            <Heart className={`w-5 h-5 ${policy.isFavorite ? "fill-theme-pink text-theme-pink" : ""}`} />
-          </button>
-        </div>
-        <CardTitle className="text-lg mt-3 text-theme-black group-hover:text-theme-livid transition-colors line-clamp-1">
-            {policy.policy_name}
-        </CardTitle>
-        {badge && <Badge className="mt-1 w-fit bg-theme-pink hover:bg-theme-pink">{badge}</Badge>}
-      </CardHeader>
-      <CardContent className="flex-1">
-        <CardDescription className="line-clamp-2 min-h-[40px]">
-          {policy.desc}
-        </CardDescription>
-      </CardContent>
-      <CardFooter>
-        <Button variant="outline" className="w-full border-theme-venus/30 hover:bg-theme-bonjour hover:text-theme-livid" onClick={onDetail}>
-          자세히 보기
-        </Button>
-      </CardFooter>
-    </Card>
-  );
-};
-
-// ★ [추가] 상세 보기(확대) 모달 컴포넌트
-// ★ [수정됨] 대형 사이즈 & 팝업 모션이 적용된 상세 모달
-const PolicyDetailModal = ({ policy, onClose, onToggle }) => {
-  
-  const handleGoToSite = () => {
-    if (policy.policy_url) {
-      window.open(policy.policy_url, "_blank", "noopener,noreferrer");
-    } else {
-      alert("링크 정보가 없습니다.");
-    }
-  };
-
-  return (
-    <>
-      {/* 1. 커스텀 애니메이션 정의 (Style 태그 삽입) */}
-      <style>{`
-        @keyframes spring-pop {
-          0% { transform: scale(0.8); opacity: 0; }
-          50% { transform: scale(1.02); opacity: 1; }
-          100% { transform: scale(1); opacity: 1; }
-        }
-        .animate-spring-pop {
-          animation: spring-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-      `}</style>
-
-      {/* 2. 배경 (Backdrop) */}
-      <div 
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300"
-        onClick={onClose}
-      >
-        {/* 3. 모달 컨텐츠 (대형 사이즈 & 팝업 애니메이션 적용) */}
-        <div 
-          className="bg-white w-full max-w-6xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col relative animate-spring-pop overflow-y-auto custom-scrollbar"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* 닫기 버튼 */}
-          <button 
-            onClick={onClose}
-            className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-black transition-colors z-20"
-          >
-            <X className="w-6 h-6" />
-          </button>
-
-          <div className="flex h-full flex-col md:flex-row">
+                        </div>
+                      </div>
+                    </div>
             
-            {/* [좌측] 헤더 및 요약 정보 (35% 너비) */}
-            <div className="w-full md:w-[35%] bg-theme-bonjour/30 p-6 sm:p-8 flex flex-col border-r border-gray-100">
-              
-              {/* 상단 뱃지 그룹 */}
-              <div className="flex flex-wrap gap-2 mb-6">
-                 <Badge className="bg-theme-livid text-white px-3 py-1 text-sm rounded-md shadow-sm">
-                    {policy.category || "정책"}
-                 </Badge>
-                 <Badge variant="outline" className="border-theme-venus/50 text-theme-venus bg-white">
-                    {policy.region}
-                 </Badge>
-              </div>
-
-              {/* 제목 */}
-              <h2 className="text-3xl font-extrabold text-theme-black leading-tight mb-6 break-keep">
-                {policy.policy_name}
-              </h2>
-
-              {/* 즐겨찾기 버튼 (크게) */}
-              <div className="mb-8">
-                <button 
-                  className={`flex items-center justify-center w-full gap-2 py-3 rounded-xl border transition-all duration-200 
-                    ${policy.isFavorite 
-                      ? "bg-theme-pink/10 border-theme-pink text-theme-pink" 
-                      : "bg-white border-gray-200 text-gray-500 hover:border-theme-pink hover:text-theme-pink"
-                    }`}
-                  onClick={() => onToggle(policy.policy_id)}
-                >
-                  <Heart className={`w-5 h-5 ${policy.isFavorite ? "fill-theme-pink" : ""}`} />
-                  <span className="font-semibold">{policy.isFavorite ? "관심 정책에 저장됨" : "관심 정책으로 저장"}</span>
-                </button>
-              </div>
-
-              {/* 요약 카드 */}
-              <div className="space-y-4 mt-auto">
-                <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                   <span className="text-sm text-theme-venus font-bold uppercase tracking-wider block mb-2">지원 금액</span>
-                   <p className="text-2xl font-bold text-theme-livid">
-                      {policy.max_benefit_amount 
-                        ? `${(policy.max_benefit_amount / 10000).toLocaleString()}만원` 
-                        : "상세 내용 참조"}
-                      <span className="text-sm font-normal text-gray-500 ml-1">최대</span>
-                   </p>
+                    {/* [추가] 필터링 및 정렬 컨트롤 영역 */}
+                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-theme-venus/20 mb-6">
+                      <div className="flex flex-col md:flex-row items-center gap-3">
+                        {/* 1. 정렬 */}
+                        <div className="flex items-center gap-2 w-full md:w-auto">
+                          <Select value={sortType} onValueChange={setSortType}>
+                            <SelectTrigger className="w-full md:w-[120px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="popular">인기순</SelectItem>
+                              <SelectItem value="alpha">사전순</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            className="border-theme-venus/30"
+                            onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                          >
+                            {sortOrder === 'asc' ? <ArrowUp className="w-5 h-5" /> : <ArrowDown className="w-5 h-5" />}
+                          </Button>
+                        </div>
+                        
+                        <div className="hidden md:block h-8 border-l border-theme-venus/30"></div>
+            
+                        {/* 2. 카테고리 필터 */}
+                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                          <SelectTrigger className="w-full md:w-[150px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.keys(POLICY_TYPE_MAP).map(cat => (
+                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+            
+                        {/* 3. 정책 유형 필터 */}
+                        <Select value={selectedPolicyType} onValueChange={setSelectedPolicyType} disabled={selectedCategory === '모두'}>
+                          <SelectTrigger className="w-full md:w-[220px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {policyTypeOptions.map(type => (
+                              <SelectItem key={type} value={type}>{type}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+            
+                        {/* 4. 검색 버튼 */}
+                        <Button className="bg-theme-livid hover:bg-theme-livid/90 w-full md:w-auto md:ml-auto" onClick={handleSearch}>
+                          <Search className="w-4 h-4 mr-2" />
+                          검색
+                        </Button>
+                      </div>
+                    </div>
+            
+                    {/* 탭 영역 */}
+                    <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
+                      <TabsList className="grid w-full md:w-[400px] grid-cols-3 bg-theme-venus/10 p-1 rounded-xl mb-6">
+                        <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:text-theme-livid data-[state=active]:shadow-sm rounded-lg">전체</TabsTrigger>
+                        <TabsTrigger value="custom" className="data-[state=active]:bg-white data-[state=active]:text-theme-pink data-[state=active]:shadow-sm rounded-lg">맞춤 정책</TabsTrigger>
+                        <TabsTrigger value="favorites" className="data-[state=active]:bg-white data-[state=active]:text-theme-livid data-[state=active]:shadow-sm rounded-lg">즐겨찾기</TabsTrigger>
+                      </TabsList>
+                      
+                      {/* 1. 전체 탭 */}
+                      <TabsContent value="all" className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[460px] content-start">
+                          {getPagedData(allPolicies, pageAll).map((policy) => (
+                            <PolicyCard 
+                              key={policy.policy_id} 
+                              policy={policy} 
+                              onToggle={handleToggleFavorite} 
+                              isDisabled={policy.isDisabled}
+                              onDetail={() => handleOpenDetail(policy)}
+                            />
+                          ))}
+                           {allPolicies.length === 0 && (
+                            <div className="col-span-full flex justify-center items-center h-full text-theme-venus">
+                               <div>해당 조건에 맞는 정책이 없어요.</div>
+                            </div>
+                          )}
+                        </div>
+                        <PaginationControl 
+                          totalItems={allPolicies.length} 
+                          currentPage={pageAll} 
+                          onPageChange={setPageAll} 
+                        />
+                      </TabsContent>
+            
+                      {/* 2. 맞춤 정책 탭 */}
+                      <TabsContent value="custom" className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                        {userInfo.has_info ? (
+                          <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[460px] content-start">
+                               {getPagedData(filteredPolicies, pageCustom).map((policy) => (
+                                  <PolicyCard 
+                                    key={policy.policy_id} 
+                                    policy={policy} 
+                                    badge="추천" 
+                                    onToggle={handleToggleFavorite} 
+                                    isDisabled={policy.isDisabled}
+                                    onDetail={() => handleOpenDetail(policy)}
+                                  />
+                                ))}
+                                {filteredPolicies.length === 0 && (
+                                  <div className="col-span-full flex justify-center items-center h-full text-theme-venus">
+                                    <div>해당 조건에 맞는 맞춤 정책이 없어요.</div>
+                                  </div>
+                                )}
+                            </div>
+                            <PaginationControl 
+                              totalItems={filteredPolicies.length} 
+                              currentPage={pageCustom} 
+                              onPageChange={setPageCustom} 
+                            />
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed border-theme-venus min-h-[400px]">
+                            <div className="p-4 bg-theme-bonjour rounded-full mb-4">
+                              <User className="w-10 h-10 text-theme-venus" />
+                            </div>
+                            <h3 className="text-xl font-bold text-theme-black mb-2">나에게 딱 맞는 정책을 찾고 싶다면?</h3>
+                            <p className="text-theme-venus mb-6">간단한 정보를 입력하고 맞춤 추천을 받아보세요.</p>
+                            <Button onClick={() => navigate("/user-info")} className="bg-theme-pink hover:bg-theme-pink/90 text-white px-8">
+                              내 정보 입력하러 가기
+                            </Button>
+                          </div>
+                        )}
+                      </TabsContent>
+            
+                      {/* 3. 즐겨찾기 탭 */}
+                      <TabsContent value="favorites" className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[460px] content-start">
+                          {getPagedData(favoritePolicies, pageFav).map((policy) => (
+                            <PolicyCard 
+                              key={policy.policy_id} 
+                              policy={policy} 
+                              onToggle={handleToggleFavorite} 
+                              isDisabled={policy.isDisabled}
+                              onDetail={() => handleOpenDetail(policy)}
+                            />
+                          ))}
+                          
+                          {favoritePolicies.length === 0 && (
+                            <div className="col-span-full flex justify-center items-center h-full text-theme-venus">
+                               <div>아직 즐겨찾기한 정책이 없어요. <Heart className="inline w-4 h-4"/>를 눌러보세요!</div>
+                            </div>
+                          )}
+                        </div>
+                        {favoritePolicies.length > 0 && (
+                          <PaginationControl 
+                            totalItems={favoritePolicies.length} 
+                            currentPage={pageFav} 
+                            onPageChange={setPageFav} 
+                          />
+                        )}
+                      </TabsContent>
+                    </Tabs>
+                  </main>
+            
+                  {/* 알림 다이얼로그 (기존 코드) */}
+                  <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+                    <AlertDialogContent className="bg-white">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-theme-black">알림</AlertDialogTitle>
+                        <AlertDialogDescription className="text-theme-venus text-base">
+                          등록된 정보가 없습니다.<br/>
+                          정보를 입력하시겠습니까?
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="border-theme-venus/30 text-theme-venus hover:text-theme-black hover:bg-theme-bonjour">
+                          아니요
+                        </AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={() => navigate("/user-info")}
+                          className="bg-theme-livid hover:bg-theme-livid/90 text-white"
+                        >
+                          예
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+            
+                  {/* ★ [추가] 상세 보기(확대) 모달 컴포넌트 렌더링 */}
+                  {selectedPolicy && (
+                    <PolicyDetailModal 
+                      policy={selectedPolicy} 
+                      onClose={handleCloseDetail} 
+                      onToggle={handleToggleFavorite}
+                    />
+                  )}
+            
                 </div>
-
-                <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                   <span className="text-sm text-theme-venus font-bold uppercase tracking-wider block mb-2">대상 주택</span>
-                   <p className="text-lg font-bold text-theme-black">
-                     {policy.max_house_price ? `${(policy.max_house_price / 100000000).toFixed(1)}억 이하` : "제한 없음"}
-                   </p>
+              );
+            };
+            
+            /* -------------------------------------------------------------------------- */
+            /* 서브 컴포넌트                                 */
+            /* -------------------------------------------------------------------------- */
+            
+            // 1. 페이지네이션 컴포넌트
+            const PaginationControl = ({ totalItems, currentPage, onPageChange }) => {
+              const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+              if (totalPages <= 1) return null;
+            
+              return (
+                <div className="flex justify-center items-center gap-2 mt-8 py-4">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="h-8 w-8 text-theme-venus hover:text-theme-livid hover:bg-transparent"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </Button>
+                  <div className="flex gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => onPageChange(pageNum)}
+                        className={`w-8 h-8 p-0 font-normal ${
+                          currentPage === pageNum 
+                            ? "bg-theme-livid text-white hover:bg-theme-livid/90 shadow-md" 
+                            : "text-theme-venus hover:text-theme-black hover:bg-theme-bonjour/50"
+                        }`}
+                      >
+                        {pageNum}
+                      </Button>
+                    ))}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="h-8 w-8 text-theme-venus hover:text-theme-livid hover:bg-transparent"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </Button>
                 </div>
-              </div>
-            </div>
-
-            {/* [우측] 상세 내용 (65% 너비) */}
-            <div className="w-full md:w-[65%] flex flex-col bg-white">
+              );
+            };
+            
+            // 2. 정책 카드 컴포넌트 (수정됨: onDetail prop 사용)
+            const PolicyCard = ({ policy, badge, onToggle, isDisabled, onDetail }) => {
+              return (
+                <Card className={`hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-theme-venus/30 group flex flex-col h-full
+                ${isDisabled 
+                      ? "opacity-50 grayscale bg-gray-100 pointer-events-none" 
+                      : "bg-white hover:shadow-xl hover:-translate-y-1" 
+                    }`}>
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start">
+                      <Badge variant="secondary" className="bg-theme-bonjour text-theme-livid hover:bg-theme-bonjour">
+                        {policy.region} · {policy.policy_type}
+                      </Badge>
+                      <button className="text-theme-venus hover:text-theme-pink transition-colors p-1"
+                        onClick={(e) => {
+                          e.stopPropagation(); 
+                          onToggle(policy.policy_id);
+                        }}
+                      >
+                        <Heart className={`w-5 h-5 ${policy.isFavorite ? "fill-theme-pink text-theme-pink" : ""}`} />
+                      </button>
+                    </div>
+                    <CardTitle className="text-lg mt-3 text-theme-black group-hover:text-theme-livid transition-colors line-clamp-1">
+                        {policy.policy_name}
+                    </CardTitle>
+                    {badge && <Badge className="mt-1 w-fit bg-theme-pink hover:bg-theme-pink">{badge}</Badge>}
+                  </CardHeader>
+                  <CardContent className="flex-1">
+                    <CardDescription className="line-clamp-2 min-h-[40px]">
+                      {policy.desc}
+                    </CardDescription>
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="outline" className="w-full border-theme-venus/30 hover:bg-theme-bonjour hover:text-theme-livid" onClick={onDetail}>
+                      자세히 보기
+                    </Button>
+                  </CardFooter>
+                </Card>
+              );
+            };
+            
+            // ★ [추가] 상세 보기(확대) 모달 컴포넌트
+            // ★ [수정됨] 대형 사이즈 & 팝업 모션이 적용된 상세 모달
+            const PolicyDetailModal = ({ policy, onClose, onToggle }) => {
               
-              {/* 스크롤 영역 */}
-              <div className="flex-1 p-6 sm:p-10 space-y-10">
-                
-                {/* 1. 정책 소개 */}
-                <section>
-                  <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-2">
-                    <span className="w-1 h-6 bg-theme-livid rounded-full"></span>
-                    어떤 정책인가요?
-                  </h3>
-                  <div className="text-gray-600 text-lg leading-8 whitespace-pre-wrap bg-gray-50 p-6 rounded-2xl border border-gray-100">
-                    {policy.desc || "상세 설명이 제공되지 않았습니다."}
+              const handleGoToSite = () => {
+                if (policy.policy_url) {
+                  window.open(policy.policy_url, "_blank", "noopener,noreferrer");
+                } else {
+                  alert("링크 정보가 없습니다.");
+                }
+              };
+            
+              return (
+                <>
+                  {/* 1. 커스텀 애니메이션 정의 (Style 태그 삽입) */}
+                  <style>{`
+                    @keyframes spring-pop {
+                      0% { transform: scale(0.8); opacity: 0; }
+                      50% { transform: scale(1.02); opacity: 1; }
+                      100% { transform: scale(1); opacity: 1; }
+                    }
+                    .animate-spring-pop {
+                      animation: spring-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+                    }
+                  `}</style>
+            
+                  {/* 2. 배경 (Backdrop) */}
+                  <div 
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300"
+                    onClick={onClose}
+                  >
+                    {/* 3. 모달 컨텐츠 (대형 사이즈 & 팝업 애니메이션 적용) */}
+                    <div 
+                      className="bg-white w-full max-w-6xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col relative animate-spring-pop overflow-y-auto custom-scrollbar"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* 닫기 버튼 */}
+                      <button 
+                        onClick={onClose}
+                        className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-black transition-colors z-20"
+                      >
+                        <X className="w-6 h-6" />
+                      </button>
+            
+                      <div className="flex h-full flex-col md:flex-row">
+                        
+                        {/* [좌측] 헤더 및 요약 정보 (35% 너비) */}
+                        <div className="w-full md:w-[35%] bg-theme-bonjour/30 p-6 sm:p-8 flex flex-col border-r border-gray-100">
+                          
+                          {/* 상단 뱃지 그룹 */}
+                          <div className="flex flex-wrap gap-2 mb-6">
+                             <Badge className="bg-theme-livid text-white px-3 py-1 text-sm rounded-md shadow-sm">
+                                {policy.category || "정책"}
+                             </Badge>
+                             <Badge variant="outline" className="border-theme-venus/50 text-theme-venus bg-white">
+                                {policy.region}
+                             </Badge>
+                          </div>
+            
+                          {/* 제목 */}
+                          <h2 className="text-3xl font-extrabold text-theme-black leading-tight mb-6 break-keep">
+                            {policy.policy_name}
+                          </h2>
+            
+                          {/* 즐겨찾기 버튼 (크게) */}
+                          <div className="mb-8">
+                            <button 
+                              className={`flex items-center justify-center w-full gap-2 py-3 rounded-xl border transition-all duration-200 
+                                ${policy.isFavorite 
+                                  ? "bg-theme-pink/10 border-theme-pink text-theme-pink" 
+                                  : "bg-white border-gray-200 text-gray-500 hover:border-theme-pink hover:text-theme-pink"
+                                }`}
+                              onClick={() => onToggle(policy.policy_id)}
+                            >
+                              <Heart className={`w-5 h-5 ${policy.isFavorite ? "fill-theme-pink" : ""}`} />
+                              <span className="font-semibold">{policy.isFavorite ? "관심 정책에 저장됨" : "관심 정책으로 저장"}</span>
+                            </button>
+                          </div>
+            
+                          {/* 요약 카드 */}
+                          <div className="space-y-4 mt-auto">
+                            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                               <span className="text-sm text-theme-venus font-bold uppercase tracking-wider block mb-2">지원 금액</span>
+                               <p className="text-2xl font-bold text-theme-livid">
+                                  {policy.max_benefit_amount 
+                                    ? `${(policy.max_benefit_amount / 10000).toLocaleString()}만원` 
+                                    : "상세 내용 참조"}
+                                  <span className="text-sm font-normal text-gray-500 ml-1">최대</span>
+                               </p>
+                            </div>
+            
+                            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                               <span className="text-sm text-theme-venus font-bold uppercase tracking-wider block mb-2">대상 주택</span>
+                               <p className="text-lg font-bold text-theme-black">
+                                 {policy.max_house_price ? `${(policy.max_house_price / 100000000).toFixed(1)}억 이하` : "제한 없음"}
+                               </p>
+                            </div>
+                          </div>
+                        </div>
+            
+                        {/* [우측] 상세 내용 (65% 너비) */}
+                        <div className="w-full md:w-[65%] flex flex-col bg-white">
+                          
+                          {/* 스크롤 영역 */}
+                          <div className="flex-1 p-6 sm:p-10 space-y-10">
+                            
+                            {/* 1. 정책 소개 */}
+                            <section>
+                              <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-2">
+                                <span className="w-1 h-6 bg-theme-livid rounded-full"></span>
+                                어떤 정책인가요?
+                              </h3>
+                              <div className="text-gray-600 text-lg leading-8 whitespace-pre-wrap bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                                {policy.desc || "상세 설명이 제공되지 않았습니다."}
+                              </div>
+                            </section>
+            
+                            {/* 2. 상세 조건 (테이블 형태) */}
+                            <section>
+                              <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-2">
+                                <span className="w-1 h-6 bg-theme-pink rounded-full"></span>
+                                누가 신청할 수 있나요?
+                              </h3>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                 <DetailItem label="거주 지역" value={policy.region} />
+                                 <DetailItem label="정책 유형" value={policy.policy_type} />
+                                 <DetailItem label="최대 대출/지원 기간" value={policy.max_duration_year ? `${policy.max_duration_year}년` : "-"} />
+                                 <DetailItem label="금리 수준" value={policy.min_rate ? `${policy.min_rate}% ~ ${policy.max_rate}%` : "-"} />
+                              </div>
+                            </section>
+                          </div>
+            
+                          {/* 하단 버튼 영역 (고정) */}
+                          <div className="p-6 border-t border-gray-100 flex justify-end gap-3 bg-white/90 backdrop-blur-sm">
+                            {/* <Button variant="ghost" onClick={onClose} size="lg" className="text-gray-500 hover:text-black text-lg">
+                              닫기
+                            </Button> */}
+                            <Button 
+                              onClick={handleGoToSite}
+                              size="lg"
+                              className="bg-theme-livid hover:bg-theme-livid/90 text-white px-8 text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
+                            >
+                              신청하러 가기 <ExternalLink className="w-5 h-5 ml-2" />
+                            </Button>
+                          </div>
+            
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </section>
-
-                {/* 2. 상세 조건 (테이블 형태) */}
-                <section>
-                  <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-2">
-                    <span className="w-1 h-6 bg-theme-pink rounded-full"></span>
-                    누가 신청할 수 있나요?
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     <DetailItem label="거주 지역" value={policy.region} />
-                     <DetailItem label="정책 유형" value={policy.policy_type} />
-                     <DetailItem label="최대 대출/지원 기간" value={policy.max_duration_year ? `${policy.max_duration_year}년` : "-"} />
-                     <DetailItem label="금리 수준" value={policy.min_rate ? `${policy.min_rate}% ~ ${policy.max_rate}%` : "-"} />
-                  </div>
-                </section>
+                </>
+              );
+            };
+            
+            // [보조 컴포넌트] 상세 정보 아이템 (반복되는 디자인 통일)
+            const DetailItem = ({ label, value }) => (
+              <div className="flex flex-col p-4 rounded-xl border border-gray-100 bg-white hover:border-theme-venus/30 transition-colors">
+                <span className="text-sm text-theme-venus mb-1">{label}</span>
+                <span className="text-lg font-medium text-theme-black">{value}</span>
               </div>
-
-              {/* 하단 버튼 영역 (고정) */}
-              <div className="p-6 border-t border-gray-100 flex justify-end gap-3 bg-white/90 backdrop-blur-sm">
-                {/* <Button variant="ghost" onClick={onClose} size="lg" className="text-gray-500 hover:text-black text-lg">
-                  닫기
-                </Button> */}
-                <Button 
-                  onClick={handleGoToSite}
-                  size="lg"
-                  className="bg-theme-livid hover:bg-theme-livid/90 text-white px-8 text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
-                >
-                  신청하러 가기 <ExternalLink className="w-5 h-5 ml-2" />
-                </Button>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-};
-
-// [보조 컴포넌트] 상세 정보 아이템 (반복되는 디자인 통일)
-const DetailItem = ({ label, value }) => (
-  <div className="flex flex-col p-4 rounded-xl border border-gray-100 bg-white hover:border-theme-venus/30 transition-colors">
-    <span className="text-sm text-theme-venus mb-1">{label}</span>
-    <span className="text-lg font-medium text-theme-black">{value}</span>
-  </div>
-);
-
-export default MainPage;
+            );
+            
+            export default MainPage;
