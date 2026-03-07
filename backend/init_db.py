@@ -36,6 +36,7 @@ def init_db():
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS policies_output (
                 policy_id INT PRIMARY KEY,
+                visit_count INT DEFAULT 0,
                 policy_name VARCHAR(255),
                 category VARCHAR(100),
                 policy_type VARCHAR(100),
@@ -47,8 +48,7 @@ def init_db():
                 house_size VARCHAR(100),
                 max_duration_year VARCHAR(100),
                 policy_url TEXT,
-                "desc" TEXT,
-                visit_count INT DEFAULT 0
+                "desc" TEXT
             );
         """)
 
@@ -133,7 +133,10 @@ def init_db():
             if os.path.exists(file_path):
                 df = pd.read_csv(file_path).where(pd.notnull(pd.read_csv(file_path)), None)
                 for _, row in df.iterrows():
-                    cursor.execute("INSERT INTO policies_output VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)", tuple(row))
+                    cursor.execute("""
+                        INSERT INTO policies_output (policy_id, policy_name, category, policy_type, max_house_price, region, max_benefit_amount, min_rate, max_rate, house_size, max_duration_year, policy_url, "desc")
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """, tuple(row))
                 print(f"✅ {file_path} 데이터 입력 완료")
 
         # (2) 정책 조건 데이터
