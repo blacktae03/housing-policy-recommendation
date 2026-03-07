@@ -143,13 +143,13 @@ const MyPage = () => {
                 <ArrowLeft className="w-6 h-6" />
             </Button>
             <div>
-                <CardTitle className="text-2xl font-bold text-theme-black">내 정보 수정</CardTitle>
+                <CardTitle className="text-xl sm:text-2xl font-bold text-theme-black">내 정보 수정</CardTitle>
                 <CardDescription className="text-theme-venus">등록된 정보를 확인하고 수정할 수 있습니다.</CardDescription>
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className="p-8">
+        <CardContent className="p-6 sm:p-8">
             {/* 1. 기본 정보 섹션 */}
             <SectionTitle><User className="w-5 h-5"/> 기본 정보</SectionTitle>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -242,7 +242,7 @@ const MyPage = () => {
 
         </CardContent>
 
-        <CardFooter className="p-6 border-t border-theme-venus/10 bg-theme-bonjour/20 flex justify-end gap-4">
+        <CardFooter className="p-6 border-t border-theme-venus/10 bg-theme-bonjour/20 flex flex-col-reverse sm:flex-row sm:justify-end gap-4">
             <Button variant="outline" onClick={() => navigate("/main")} className="h-12 px-6 border-theme-venus/30 text-theme-venus hover:text-theme-black">
                 취소
             </Button>

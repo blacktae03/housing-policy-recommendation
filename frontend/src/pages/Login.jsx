@@ -105,10 +105,10 @@ const Login = () => {
 
         {/* --- [화면 1] 로그인 방식 선택 --- */}
         {!isIdLogin && (
-            <div className="w-full animate-in fade-in slide-in-from-bottom-8 duration-700 pt-24 pb-10 px-10">
+            <div className="w-full animate-in fade-in slide-in-from-bottom-8 duration-700 pt-24 pb-10 px-6 sm:px-10">
                 <div className="text-center mb-5">
-                    <h2 className="text-3xl font-bold text-theme-black mb-2">반가워요! 👋</h2>
-                    <p className="text-theme-venus text-lg">1분 만에 시작해보세요</p>
+                    <h2 className="text-2xl sm:text-3xl font-bold text-theme-black mb-2">반가워요! 👋</h2>
+                    <p className="text-theme-venus text-base sm:text-lg">1분 만에 시작해보세요</p>
                 </div>
                 
                 <div className="space-y-4">
@@ -166,15 +166,15 @@ const Login = () => {
                 </Button>
 
                 <CardHeader className="space-y-2 text-center pb-6">
-                    <CardTitle className="text-2xl font-bold text-theme-black">
+                    <CardTitle className="text-xl sm:text-2xl font-bold text-theme-black">
                         환영합니다!
                     </CardTitle>
-                    <CardDescription className="text-theme-venus text-base">
+                    <CardDescription className="text-theme-venus text-sm sm:text-base">
                         서비스 이용을 위해 로그인해주세요.
                     </CardDescription>
                 </CardHeader>
                 
-                <CardContent className="grid gap-5 px-10">
+                <CardContent className="grid gap-5 px-6 sm:px-10">
                     <div className="grid gap-2">
                         <Label htmlFor="username">아이디</Label>
                         <Input 
@@ -200,7 +200,7 @@ const Login = () => {
                     </div>
                 </CardContent>
                 
-                <CardFooter className="flex flex-col gap-4 px-10 pb-10 pt-4">
+                <CardFooter className="flex flex-col gap-4 px-6 sm:px-10 pb-10 pt-4">
                     <Button 
                         className="w-full h-12 text-lg bg-theme-livid hover:bg-theme-livid/90 text-white font-bold shadow-lg transition-all active:scale-95" 
                         onClick={handleLogin}

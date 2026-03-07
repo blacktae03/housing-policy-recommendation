@@ -95,7 +95,7 @@ const SignUp = () => {
               <UserPlus className="w-10 h-10 text-theme-livid" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold text-theme-black">
+          <CardTitle className="text-2xl sm:text-3xl font-bold text-theme-black">
             회원가입
           </CardTitle>
           <CardDescription className="text-theme-venus">
@@ -103,7 +103,7 @@ const SignUp = () => {
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="grid gap-4 px-10">
+        <CardContent className="grid gap-4 px-6 sm:px-10">
           {/* 아이디 */}
           <div className="grid gap-2">
             <Label htmlFor="username">아이디</Label>
@@ -172,7 +172,7 @@ const SignUp = () => {
           )}
         </CardContent>
 
-        <CardFooter className="flex flex-col gap-4 px-10 pb-10 pt-4">
+        <CardFooter className="flex flex-col gap-4 px-6 sm:px-10 pb-10 pt-4">
           <Button
             className="w-full h-12 text-lg bg-theme-livid hover:bg-theme-livid/90 text-white font-bold shadow-lg transition-all active:scale-95"
             onClick={handleSignup}

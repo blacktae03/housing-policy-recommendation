@@ -188,7 +188,7 @@ const UserInfo = () => {
       case 1:
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-right duration-300">
-            <h2 className="text-2xl font-bold text-theme-black text-center mb-6">생년월일을 알려주세요 🎂</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-theme-black text-center mb-6">생년월일을 알려주세요 🎂</h2>
             <div className="flex gap-2">
               <Select onValueChange={(v) => handleChange("birthYear", v)} value={formData.birthYear}>
                 <SelectTrigger><SelectValue placeholder="년" /></SelectTrigger>
@@ -208,7 +208,7 @@ const UserInfo = () => {
       case 2:
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-right duration-300">
-            <h2 className="text-2xl font-bold text-theme-black text-center mb-2">연 소득을 알려주세요 💰</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-theme-black text-center mb-2">연 소득을 알려주세요 💰</h2>
             <p className="text-center text-theme-venus mb-6 text-sm">세전 기준 / 단위: 만원</p>
             <div className="relative">
                 <Input 
@@ -225,7 +225,7 @@ const UserInfo = () => {
       case 3:
         return (
             <div className="space-y-4 animate-in fade-in slide-in-from-right duration-300">
-              <h2 className="text-2xl font-bold text-theme-black text-center mb-2">총 자산을 알려주세요 🏦</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-theme-black text-center mb-2">총 자산을 알려주세요 🏦</h2>
               <p className="text-center text-theme-venus mb-6 text-sm">부채 포함 / 단위: 만원</p>
               <div className="relative">
                   <Input 
@@ -242,7 +242,7 @@ const UserInfo = () => {
       case 4:
         return (
             <div className="space-y-4 animate-in fade-in slide-in-from-right duration-300">
-              <h2 className="text-2xl font-bold text-theme-black text-center mb-8">현재 주택을 소유하고 계신가요? 🏠</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-theme-black text-center mb-8">현재 주택을 소유하고 계신가요? 🏠</h2>
               <div className="flex flex-col gap-3">
                 <Button 
                     variant={formData.is_house_owner === true ? "default" : "outline"} 
@@ -267,7 +267,7 @@ const UserInfo = () => {
                 {/* 5-0. 기혼 여부 */}
                 {subStep === 0 && (
                     <>
-                        <h2 className="text-2xl font-bold text-theme-black text-center mb-8">기혼이신가요? 💍</h2>
+                        <h2 className="text-xl sm:text-2xl font-bold text-theme-black text-center mb-8">기혼이신가요? 💍</h2>
                         <div className="flex flex-col gap-3">
                             <Button 
                                 variant={formData.is_married === true ? "default" : "outline"} 
@@ -290,7 +290,7 @@ const UserInfo = () => {
                 {/* 5-1. 신혼 부부 */}
                 {subStep === 1 && (
                     <>
-                        <h2 className="text-2xl font-bold text-theme-black text-center mb-2">신혼부부이신가요? 💒</h2>
+                        <h2 className="text-xl sm:text-2xl font-bold text-theme-black text-center mb-2">신혼부부이신가요? 💒</h2>
                         <p className="text-center text-theme-venus mb-8 text-sm">(혼인 신고일 기준 7년 이내)</p>
                         <div className="flex flex-col gap-3">
                             <Button variant={formData.is_newlywed === true ? "default" : "outline"} className={cn("h-14 text-lg", formData.is_newlywed === true && "bg-theme-livid")} onClick={() => handleChange("is_newlywed", true)}>예, 신혼부부입니다</Button>
@@ -302,7 +302,7 @@ const UserInfo = () => {
                 {/* 5-2. 신생아 */}
                 {subStep === 2 && (
                     <>
-                        <h2 className="text-2xl font-bold text-theme-black text-center mb-2">신생아가 있으신가요? 👶</h2>
+                        <h2 className="text-xl sm:text-2xl font-bold text-theme-black text-center mb-2">신생아가 있으신가요? 👶</h2>
                         <p className="text-center text-theme-venus mb-8 text-sm">(만 2세 이하)</p>
                         <div className="flex flex-col gap-3">
                             <Button variant={formData.has_newborn === true ? "default" : "outline"} className={cn("h-14 text-lg", formData.has_newborn === true && "bg-theme-livid")} onClick={() => handleChange("has_newborn", true)}>예, 있습니다</Button>
@@ -314,7 +314,7 @@ const UserInfo = () => {
                  {/* 5-3. 자녀 수 */}
                  {subStep === 3 && (
                     <>
-                        <h2 className="text-2xl font-bold text-theme-black text-center mb-8">자녀는 몇 명이신가요? 🐥</h2>
+                        <h2 className="text-xl sm:text-2xl font-bold text-theme-black text-center mb-8">자녀는 몇 명이신가요? 🐥</h2>
                         <div className="relative">
                             <Input type="number" placeholder="0" className="text-right pr-12 text-lg h-14" value={formData.child_count} onChange={(e) => handleChange("child_count", e.target.value)}/>
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-theme-venus font-bold">명</span>
@@ -325,7 +325,7 @@ const UserInfo = () => {
                 {/* 5-4. 맞벌이 (순서 변경됨) */}
                 {subStep === 4 && (
                     <>
-                        <h2 className="text-2xl font-bold text-theme-black text-center mb-8">맞벌이이신가요? 💼</h2>
+                        <h2 className="text-xl sm:text-2xl font-bold text-theme-black text-center mb-8">맞벌이이신가요? 💼</h2>
                         <div className="flex flex-col gap-3">
                             <Button variant={formData.dual_income === true ? "default" : "outline"} className={cn("h-14 text-lg", formData.dual_income === true && "bg-theme-livid")} onClick={() => handleChange("dual_income", true)}>예, 맞벌이입니다</Button>
                             <Button variant={formData.dual_income === false ? "default" : "outline"} className={cn("h-14 text-lg", formData.dual_income === false && "bg-theme-livid")} onClick={() => handleChange("dual_income", false)}>아니요, 외벌이입니다</Button>
@@ -339,7 +339,7 @@ const UserInfo = () => {
       case 6:
         return (
             <div className="space-y-4 animate-in fade-in slide-in-from-right duration-300">
-                <h2 className="text-2xl font-bold text-theme-black text-center mb-2">가구원은 몇 명인가요? 👨‍👩‍👧‍👦</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-theme-black text-center mb-2">가구원은 몇 명인가요? 👨‍👩‍👧‍👦</h2>
                 <p className="text-center text-theme-venus mb-8 text-sm">(본인 포함, 실제 생계 공유 기준)</p>
                 <div className="relative">
                     <Select onValueChange={(v) => handleChange("household_size", v)} value={formData.household_size}>
@@ -357,7 +357,7 @@ const UserInfo = () => {
       case 7:
         return (
             <div className="space-y-4 animate-in fade-in slide-in-from-right duration-300">
-              <h2 className="text-2xl font-bold text-theme-black text-center mb-2">마지막이에요! 해당되는 사항이 있나요?</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-theme-black text-center mb-2">마지막이에요! 해당되는 사항이 있나요?</h2>
               <p className="text-center text-theme-venus mb-6 text-sm">중복 선택 가능</p>
               <div className="grid grid-cols-2 gap-3">
                 {etcOptions.map((option) => (
@@ -418,11 +418,11 @@ const UserInfo = () => {
             )}
         </CardHeader>
 
-        <CardContent className="flex-1 flex flex-col justify-center px-8 pb-10">
+        <CardContent className="flex-1 flex flex-col justify-center px-6 sm:px-8 pb-10">
             {renderQuestion()}
         </CardContent>
 
-        <CardFooter className="px-8 pb-8">
+        <CardFooter className="px-6 sm:px-8 pb-8">
             <Button 
                 className={cn(
                     "w-full h-14 text-xl font-bold rounded-xl transition-all shadow-lg",
