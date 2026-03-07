@@ -463,79 +463,73 @@ const MainPage = () => {
               </div>
                         </div>
                       </div>
-                    </div>
-            
-                    {/* [추가] 필터링 및 정렬 컨트롤 영역 */}
-                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-theme-venus/20 mb-6">
-                      <div className="flex flex-col md:flex-row items-center gap-3">
-                        {/* 1. 정렬 */}
-                        <div className="flex items-center gap-2 w-full md:w-auto">
-                          <Select value={sortType} onValueChange={setSortType}>
-                            <SelectTrigger className="w-full md:w-[120px]">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="popular">인기순</SelectItem>
-                              <SelectItem value="alpha">사전순</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Button 
-                            variant="outline" 
-                            size="icon" 
-                            className="border-theme-venus/30"
-                            onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                          >
-                            {sortOrder === 'asc' ? <ArrowUp className="w-5 h-5" /> : <ArrowDown className="w-5 h-5" />}
-                          </Button>
-                        </div>
-                        
-                        <div className="hidden md:block h-8 border-l border-theme-venus/30"></div>
-            
-                        {/* 2. 카테고리 필터 */}
-                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                          <SelectTrigger className="w-full md:w-[150px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.keys(POLICY_TYPE_MAP).map(cat => (
-                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-            
-                        {/* 3. 정책 유형 필터 */}
-                        <Select value={selectedPolicyType} onValueChange={setSelectedPolicyType} disabled={selectedCategory === '모두'}>
-                          <SelectTrigger className="w-full md:w-[220px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {policyTypeOptions.map(type => (
-                              <SelectItem key={type} value={type}>{type}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-            
-                        {/* 4. 검색 버튼 */}
-                        <Button className="bg-theme-livid hover:bg-theme-livid/90 w-full md:w-auto md:ml-auto" onClick={handleSearch}>
-                          <Search className="w-4 h-4 mr-2" />
-                          검색
-                        </Button>
-                      </div>
-                    </div>
-            
-                    {/* 탭 영역 */}
-                    <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
-                      <TabsList className="grid w-full md:w-[400px] grid-cols-3 bg-theme-venus/10 p-1 rounded-xl mb-6">
-                        <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:text-theme-livid data-[state=active]:shadow-sm rounded-lg">전체</TabsTrigger>
-                        <TabsTrigger value="custom" className="data-[state=active]:bg-white data-[state=active]:text-theme-pink data-[state=active]:shadow-sm rounded-lg">맞춤 정책</TabsTrigger>
-                        <TabsTrigger value="favorites" className="data-[state=active]:bg-white data-[state=active]:text-theme-livid data-[state=active]:shadow-sm rounded-lg">즐겨찾기</TabsTrigger>
-                      </TabsList>
-                      
-                      {/* 1. 전체 탭 */}
-                      <TabsContent value="all" className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[460px] content-start">
-                          {getPagedData(allPolicies, pageAll).map((policy) => (
-                            <PolicyCard 
+                            </div>
+                    
+                            {/* 탭 영역 */}
+                            <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
+                              <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                                <TabsList className="grid w-full md:w-[400px] grid-cols-3 bg-theme-venus/10 p-1 rounded-xl">
+                                  <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:text-theme-livid data-[state=active]:shadow-sm rounded-lg">전체</TabsTrigger>
+                                  <TabsTrigger value="custom" className="data-[state=active]:bg-white data-[state=active]:text-theme-pink data-[state=active]:shadow-sm rounded-lg">맞춤 정책</TabsTrigger>
+                                  <TabsTrigger value="favorites" className="data-[state=active]:bg-white data-[state=active]:text-theme-livid data-[state=active]:shadow-sm rounded-lg">즐겨찾기</TabsTrigger>
+                                </TabsList>
+                                
+                                {/* [수정] 필터링 및 정렬 컨트롤 (탭 리스트 오른쪽으로 이동) */}
+                                            <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                                              <div className="flex items-center gap-2 w-full sm:w-auto">
+                                                <Select value={sortType} onValueChange={setSortType}>
+                                                  <SelectTrigger className="w-full sm:w-[120px] bg-white">
+                                                    <SelectValue />
+                                                  </SelectTrigger>
+                                                  <SelectContent>
+                                                    <SelectItem value="popular">인기순</SelectItem>
+                                                    <SelectItem value="alpha">사전순</SelectItem>
+                                                  </SelectContent>
+                                                </Select>
+                                                <Button 
+                                                  variant="outline" 
+                                                  size="icon" 
+                                                  className="border-theme-venus/30 bg-white"
+                                                  onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                                                >
+                                                  {sortOrder === 'asc' ? <ArrowUp className="w-5 h-5" /> : <ArrowDown className="w-5 h-5" />}
+                                                </Button>
+                                              </div>
+                                              
+                                              <div className="flex items-center gap-2 w-full sm:w-auto">
+                                                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                                                  <SelectTrigger className="w-full sm:w-[130px] bg-white">
+                                                    <SelectValue />
+                                                  </SelectTrigger>
+                                                  <SelectContent>
+                                                    {Object.keys(POLICY_TYPE_MAP).map(cat => (
+                                                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                                    ))}
+                                                  </SelectContent>
+                                                </Select>
+                                
+                                                <Select value={selectedPolicyType} onValueChange={setSelectedPolicyType} disabled={selectedCategory === '모두'}>
+                                                  <SelectTrigger className="w-full sm:w-[180px] bg-white">
+                                                    <SelectValue />
+                                                  </SelectTrigger>
+                                                  <SelectContent>
+                                                    {policyTypeOptions.map(type => (
+                                                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                                                    ))}
+                                                  </SelectContent>
+                                                </Select>
+                                              </div>
+                                
+                                              <Button className="bg-theme-livid hover:bg-theme-livid/90 w-full sm:w-auto" onClick={handleSearch}>
+                                                <Search className="w-4 h-4 mr-2" />
+                                                검색
+                                              </Button>
+                                            </div>                              </div>
+                              
+                              {/* 1. 전체 탭 */}
+                              <TabsContent value="all" className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[460px] content-start">
+                                  {getPagedData(allPolicies, pageAll).map((policy) => (                            <PolicyCard 
                               key={policy.policy_id} 
                               policy={policy} 
                               onToggle={handleToggleFavorite} 
