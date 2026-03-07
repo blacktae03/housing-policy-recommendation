@@ -133,7 +133,7 @@ def init_db():
             if os.path.exists(file_path):
                 df = pd.read_csv(file_path).where(pd.notnull(pd.read_csv(file_path)), None)
                 for _, row in df.iterrows():
-                    cursor.execute("INSERT INTO policies_output VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)", tuple(row))
+                    cursor.execute("INSERT INTO policies_output VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)", tuple(row))
                 print(f"✅ {file_path} 데이터 입력 완료")
 
         # (2) 정책 조건 데이터
