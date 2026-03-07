@@ -572,6 +572,16 @@ def read_policy_detail(policy_id: int):
         raise HTTPException(status_code=404, detail="해당 정책을 찾을 수 없습니다.")
     return policy
 
+@router.post("/policies/{policy_id}/visit")
+def record_policy_visit(policy_id: int):
+    """정책 상세 보기 시 호출되어 visit_count를 1 증가시킵니다."""
+    success = db.increment_policy_visit_count(policy_id)
+    if not success:
+        # 실제 운영에서는 policy_id가 없는 경우 등 에러를 좀 더 세분화할 수 있습니다.
+        raise HTTPException(status_code=500, detail="조회수 업데이트 중 오류가 발생했습니다.")
+    return {"message": "조회수가 업데이트되었습니다."}
+
+
 # (참고) 서버 실행은 터미널에서: uvicorn main:app --reload
 
 

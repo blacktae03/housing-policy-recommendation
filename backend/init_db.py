@@ -47,7 +47,8 @@ def init_db():
                 house_size VARCHAR(100),
                 max_duration_year VARCHAR(100),
                 policy_url TEXT,
-                "desc" TEXT
+                "desc" TEXT,
+                visit_count INT DEFAULT 0
             );
         """)
 

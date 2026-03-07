@@ -595,3 +595,23 @@ def get_or_create_social_user(username, nickname, social_id, provider):
     finally:
         cursor.close()
         conn.close()
+
+def increment_policy_visit_count(policy_id: int):
+    """특정 정책의 visit_count를 1 증가시킴"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            UPDATE policies_output
+            SET visit_count = visit_count + 1
+            WHERE policy_id = %s
+        """, (policy_id,))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Visit count 증가 에러: {e}")
+        conn.rollback()
+        return False
+    finally:
+        cursor.close()
+        conn.close()

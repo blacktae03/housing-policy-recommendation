@@ -281,6 +281,13 @@ const MainPage = () => {
   
   // ★ [추가] 모달 열기 핸들러 (PolicyCard에서 호출됨)
   const handleOpenDetail = (policy) => {
+    // ★ [추가] 모달을 열 때 조회수(visit_count)를 1 늘리는 API를 호출합니다.
+    // 이 작업은 백그라운드에서 조용히 실행되며, 실패해도 UI에 영향을 주지 않습니다.
+    try {
+      api.post(`/policies/${policy.policy_id}/visit`);
+    } catch (error) {
+      console.error("조회수 업데이트 실패:", error);
+    }
     setSelectedPolicy(policy);
   };
 

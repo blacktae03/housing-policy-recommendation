@@ -11,9 +11,9 @@ BEGIN;
    - 공공데이터포털 및 주택도시기금 공식 사이트 기반 데이터
    - 초기 서비스 로직 검증을 위해 핵심 정책 위주로 선별하여 구성하였습니다.
    ========================================= */
-INSERT INTO public.policies (policy_id, category, policy_type, policy_name, region, max_house_price, req_newborn, req_newlywed, min_children, min_age, max_age, house_owner_allowed, asset_limit, max_benefit_amount, min_rate, max_rate, max_duration_year, policy_url, "desc") VALUES
-(100, '금융지원', 'LOAN', '내집마련 디딤돌대출', '전국', 500000000, false, false, 0, 19, 99, false, 488000000, 400000000, 2.85, 4.15, 30, 'https://nhuf.molit.go.kr/FP/FP005/FP0050201.jsp', '일반 5억(신혼 6억) 이하 주택. LTV 70~80%.'),
-(101, '금융지원', 'LOAN', '신생아 특례 구입자금', '전국', 900000000, true, false, 0, 19, 99, false, 488000000, 500000000, 1.6, 3.3, 30, 'https://www.myhome.go.kr/hws/portal/cont/selectBabySpecialCaseStepStoneLoneView.do', '9억 이하 주택. 2년 내 출산 필수.'),
+INSERT INTO public.policies (policy_id, category, policy_type, policy_name, region, max_house_price, req_newborn, req_newlywed, min_children, min_age, max_age, house_owner_allowed, asset_limit, max_benefit_amount, min_rate, max_rate, max_duration_year, policy_url, "desc", visit_count) VALUES
+(100, '금융지원', 'LOAN', '내집마련 디딤돌대출', '전국', 500000000, false, false, 0, 19, 99, false, 488000000, 400000000, 2.85, 4.15, 30, 'https://nhuf.molit.go.kr/FP/FP005/FP0050201.jsp', '일반 5억(신혼 6억) 이하 주택. LTV 70~80%.', 2000),
+(101, '금융지원', 'LOAN', '신생아 특례 구입자금', '전국', 900000000, true, false, 0, 19, 99, false, 488000000, 500000000, 1.6, 3.3, 30, 'https://www.myhome.go.kr/hws/portal/cont/selectBabySpecialCaseStepStoneLoneView.do', '9억 이하 주택. 2년 내 출산 필수.', ),
 (102, '금융지원', 'LOAN', '버팀목 전세자금대출', '전국', 300000000, false, false, 0, 19, 99, false, 345000000, 120000000, 2.1, 2.9, 10, 'https://nhuf.molit.go.kr/FP/FP005/FP0050401.jsp', '보증금 수도권 3억/지방 2억 이하.'),
 (103, '금융지원', 'LOAN', '청년전용 버팀목전세', '전국', 300000000, false, false, 0, 19, 34, false, 345000000, 200000000, 1.8, 2.7, 10, 'https://nhuf.molit.go.kr/FP/FP005/FP0050402.jsp', '보증금 3억 이하. 만 34세 이하 청년.'),
 (104, '금융지원', 'LOAN', '신혼부부전용 구입자금', '전국', 600000000, false, true, 0, 19, 99, false, 488000000, 400000000, 2.15, 3.25, 30, 'https://nhuf.molit.go.kr/FP/FP005/FP0050204.jsp', '6억 이하 주택. 신혼부부 전용.'),

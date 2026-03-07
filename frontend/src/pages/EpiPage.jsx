@@ -39,6 +39,7 @@ const EpiPage = () => {
         */}
         <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold text-theme-black mb-12 sm:mb-20 leading-[2.2] tracking-tight drop-shadow-md"style={{ lineHeight: "1.4" }}>
           내가 받을 수 있는 
+          <br className="sm:hidden" />
           <span className="text-theme-livid"> 정부 지원 정책</span>은?
         </h1>
 
