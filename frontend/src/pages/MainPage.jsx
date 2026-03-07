@@ -332,7 +332,7 @@ const MainPage = () => {
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-8">
         
         <div className="mb-8 space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-theme-black">
+          <h1 className="text-xl sm:text-3xl font-bold text-theme-black">
             <span className="text-theme-livid">{userInfo.nickname}</span>님을 위한 정책을 찾아볼까요?
           </h1>
 
@@ -376,7 +376,7 @@ const MainPage = () => {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-venus w-4 h-4" />
                   <Input 
                     placeholder="아파트 이름 검색 (예: 래미안)" 
-                    className="pl-10"
+                    className="pl-10 text-sm sm:text-base"
                     value={aptSearchTerm}
                     onChange={handleAptSearchChange}
                     onKeyDown={handleKeyDown}
@@ -666,12 +666,12 @@ const PolicyDetailModal = ({ policy, onClose, onToggle }) => {
 
       {/* 2. 배경 (Backdrop) */}
       <div 
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-300"
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300"
         onClick={onClose}
       >
         {/* 3. 모달 컨텐츠 (대형 사이즈 & 팝업 애니메이션 적용) */}
         <div 
-          className="bg-white w-full max-w-6xl h-full sm:h-[85vh] rounded-none sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col relative animate-spring-pop"
+          className="bg-white w-full max-w-6xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col relative animate-spring-pop overflow-y-auto custom-scrollbar"
           onClick={(e) => e.stopPropagation()}
         >
           {/* 닫기 버튼 */}
@@ -685,7 +685,7 @@ const PolicyDetailModal = ({ policy, onClose, onToggle }) => {
           <div className="flex h-full flex-col md:flex-row">
             
             {/* [좌측] 헤더 및 요약 정보 (35% 너비) */}
-            <div className="w-full md:w-[35%] bg-theme-bonjour/30 p-6 sm:p-8 flex flex-col border-r border-gray-100 overflow-y-auto custom-scrollbar">
+            <div className="w-full md:w-[35%] bg-theme-bonjour/30 p-6 sm:p-8 flex flex-col border-r border-gray-100">
               
               {/* 상단 뱃지 그룹 */}
               <div className="flex flex-wrap gap-2 mb-6">
@@ -742,7 +742,7 @@ const PolicyDetailModal = ({ policy, onClose, onToggle }) => {
             <div className="w-full md:w-[65%] flex flex-col bg-white">
               
               {/* 스크롤 영역 */}
-              <div className="flex-1 p-6 sm:p-10 overflow-y-auto custom-scrollbar space-y-10">
+              <div className="flex-1 p-6 sm:p-10 space-y-10">
                 
                 {/* 1. 정책 소개 */}
                 <section>
