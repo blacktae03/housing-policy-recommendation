@@ -797,6 +797,9 @@ const MainPage = () => {
                                       <div className="flex items-center text-base text-theme-venus mb-2">
                                         {Icon && <Icon className="w-5 h-5 mr-2" />}
                                         <span>{frontTitle}</span>
+                                        {canFlip && (
+                                          <RefreshCw className="w-4 h-4 ml-auto text-gray-400 group-hover:text-theme-livid transition-transform duration-300 group-hover:rotate-180" />
+                                        )}
                                       </div>
                                       <span className="text-lg font-medium text-theme-black">{frontValue}</span>
                                     </div>
@@ -821,6 +824,9 @@ const MainPage = () => {
                                   <div className="flex items-center text-base text-theme-venus mb-2">
                                     {Icon && <Icon className="w-5 h-5 mr-2" />}
                                     <span>{frontTitle}</span>
+                                    {canFlip && (
+                                      <RefreshCw className="w-4 h-4 ml-auto text-gray-400 group-hover:text-theme-livid transition-transform duration-300 group-hover:rotate-180" />
+                                    )}
                                   </div>
                                   <span className="text-lg font-medium text-theme-black">{frontValue}</span>
                                 </div>

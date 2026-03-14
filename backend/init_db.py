@@ -150,11 +150,21 @@ def init_db():
                     'limit_detail', 'duration', 'duration_detail', 'priority', 
                     'priority_detail', 'caution'
                 ]
+
+                def custom_bullet_replace(text):
+                    if not isinstance(text, str):
+                        return text
+                    # 문자열이 '· '로 시작하는 경우, 첫 번째 '· '는 그대로 두고 나머지만 변경
+                    if text.startswith('· '):
+                        return '· ' + text[2:].replace('· ', '\n· ')
+                    else:
+                        return text.replace('· ', '\n· ')
+
                 for col in text_columns:
                     if col in df.columns:
                         # 문자열이 아닌 경우를 대비하여 str 접근자 사용 전 타입 체크
                         if pd.api.types.is_string_dtype(df[col]):
-                            df[col] = df[col].str.replace('· ', '\n· ', regex=False)
+                            df[col] = df[col].apply(custom_bullet_replace)
 
                 for _, row in df.iterrows():
                     cursor.execute("""
