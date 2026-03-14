@@ -770,7 +770,7 @@ const MainPage = () => {
             
               return (
                 <div
-                  className={`flip-card group h-full ${canFlip ? 'cursor-pointer' : ''}`}
+                  className={`flip-card group h-[100px] ${canFlip ? 'cursor-pointer' : ''}`}
                   onClick={handleFlip}
                 >
                   <div
