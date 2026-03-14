@@ -755,6 +755,25 @@ const MainPage = () => {
             
             // ★ [추가] 상세 보기(확대) 모달 컴포넌트
             // ★ [수정됨] 대형 사이즈 & 팝업 모션이 적용된 상세 모달
+            const FlippableDetailItem = ({ label, value }) => {
+              const [isFlipped, setIsFlipped] = useState(false);
+            
+              return (
+                <div className={`flip-card ${isFlipped ? 'flipped' : ''}`} onClick={() => setIsFlipped(!isFlipped)}>
+                  <div className="flip-card-inner">
+                    <div className="flip-card-front">
+                      <DetailItem label={label} value={value} />
+                    </div>
+                    <div className="flip-card-back">
+                      <div className="flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white shadow-sm h-full justify-center items-center">
+                        <p className="text-theme-black">Detail Test</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            };
+
             const PolicyDetailModal = ({ policy, onClose, onToggle }) => {
               const handleGoToSite = () => {
                 if (policy.policy_url) {
@@ -883,10 +902,10 @@ const MainPage = () => {
                         <section>
                            <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-2"><span className="w-1 h-6 bg-theme-pink rounded-full"></span>누가 신청할 수 있나요?</h3>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <DetailItem label="거주 지역" value={policy.region} />
-                            <DetailItem label="정책 유형" value={policy.policy_type} />
-                            <DetailItem label="최대 대출/지원 기간" value={policy.max_duration_year ? `${policy.max_duration_year}년` : "-"} />
-                            <DetailItem label="금리 수준" value={policy.min_rate ? `${policy.min_rate}% ~ ${policy.max_rate}%` : "-"} />
+                            <FlippableDetailItem label="거주 지역" value={policy.region} />
+                            <FlippableDetailItem label="정책 유형" value={policy.policy_type} />
+                            <FlippableDetailItem label="최대 대출/지원 기간" value={policy.max_duration_year ? `${policy.max_duration_year}년` : "-"} />
+                            <FlippableDetailItem label="금리 수준" value={policy.min_rate ? `${policy.min_rate}% ~ ${policy.max_rate}%` : "-"} />
                           </div>
                         </section>
                       </div>
@@ -904,6 +923,11 @@ const MainPage = () => {
                     @keyframes spring-pop { 0% { transform: scale(0.8); opacity: 0; } 50% { transform: scale(1.02); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
                     .animate-spring-pop { animation: spring-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
                     .shadow-inner-lg { box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05); }
+                    .flip-card { perspective: 1000px; cursor: pointer; }
+                    .flip-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; }
+                    .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+                    .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+                    .flip-card-back { transform: rotateY(180deg); }
                   `}</style>
                   <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300" onClick={onClose}>
                     <div className="bg-white w-full max-w-6xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col relative animate-spring-pop overflow-y-auto custom-scrollbar" onClick={(e) => e.stopPropagation()}>
