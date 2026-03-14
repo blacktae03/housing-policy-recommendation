@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 // [수정] X 아이콘, ExternalLink, 화살표 아이콘 추가
-import { Home, User, LogOut, Heart, Search, ChevronLeft, ChevronRight, X, ExternalLink, ArrowUp, ArrowDown } from "lucide-react";
+import { Home, User, LogOut, Heart, Search, ChevronLeft, ChevronRight, X, ExternalLink, ArrowUp, ArrowDown, Building, PiggyBank, Users, Info, AlertTriangle, FileText, Target, Calendar, Wallet } from "lucide-react";
 import api from "@/api/axios";
 import logoImg from "@/assets/logo.png";
 
@@ -756,7 +756,6 @@ const MainPage = () => {
             // ★ [추가] 상세 보기(확대) 모달 컴포넌트
             // ★ [수정됨] 대형 사이즈 & 팝업 모션이 적용된 상세 모달
             const PolicyDetailModal = ({ policy, onClose, onToggle }) => {
-              
               const handleGoToSite = () => {
                 if (policy.policy_url) {
                   window.open(policy.policy_url, "_blank", "noopener,noreferrer");
@@ -764,250 +763,164 @@ const MainPage = () => {
                   alert("링크 정보가 없습니다.");
                 }
               };
-
-              const renderDetails = () => {
-                // 주택공급 & (공공임대 or 민간임대)
-                if (policy.category === '주택공급' && (policy.policy_type === '공공임대' || policy.policy_type === '민간임대')) {
+            
+              const renderContent = () => {
+                const isRental = policy.category === '주택공급' && (policy.policy_type === '공공임대' || policy.policy_type === '민간임대');
+                const isSale = policy.category === '주택공급' && (policy.policy_type === '공공분양' || policy.policy_type === '민간분양');
+            
+                if (isRental || isSale) {
+                  const details = {
+                    benefitLabel: isRental ? "임대료 수준" : "분양가",
+                    benefitValue: policy.benefit || "상세 내용 참조",
+                    limitLabel: "지원 방식",
+                    limitValue: policy.limit || "제한 없음",
+                    durationLabel: "거주 기간",
+                    durationValue: policy.duration || "-",
+                    priorityLabel: isRental ? "소득 기준" : "조건",
+                    priorityValue: policy.priority || "-",
+                    benefitDetailLabel: isRental ? "지원 한도" : "지원 내용",
+                    benefitDetailValue: policy.benefit_detail || "-",
+                  };
+            
                   return (
-                    <>
-                      {/* [좌측] 헤더 및 요약 정보 */}
-                      <div className="w-full md:w-[35%] bg-theme-bonjour/30 p-6 sm:p-8 flex flex-col border-r border-gray-100">
-                        <div className="flex flex-wrap gap-2 mb-6">
-                          <Badge className="bg-theme-livid text-white px-3 py-1 text-sm rounded-md shadow-sm">{policy.category || "정책"}</Badge>
-                          <Badge variant="outline" className="border-theme-venus/50 text-theme-venus bg-white">{policy.region}</Badge>
+                    <div className="flex h-full flex-col md:flex-row">
+                      {/* Left Pane */}
+                      <div className="w-full md:w-[40%] bg-theme-bonjour/40 p-6 sm:p-8 flex flex-col border-r border-gray-200">
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          <Badge className="bg-theme-livid text-white px-3 py-1 text-sm rounded-md shadow">{policy.category}</Badge>
+                          <Badge variant="outline" className="border-theme-venus/50 text-theme-venus bg-white shadow-sm">{policy.policy_type}</Badge>
                         </div>
-                        <h2 className="text-3xl font-extrabold text-theme-black leading-tight mb-6 break-keep">{policy.policy_name}</h2>
-                        <div className="mb-8">
-                          <button 
-                            className={`flex items-center justify-center w-full gap-2 py-3 rounded-xl border transition-all duration-200 ${policy.isFavorite ? "bg-theme-pink/10 border-theme-pink text-theme-pink" : "bg-white border-gray-200 text-gray-500 hover:border-theme-pink hover:text-theme-pink"}`}
-                            onClick={() => onToggle(policy.policy_id)}
-                          >
-                            <Heart className={`w-5 h-5 ${policy.isFavorite ? "fill-theme-pink" : ""}`} />
-                            <span className="font-semibold">{policy.isFavorite ? "관심 정책에 저장됨" : "관심 정책으로 저장"}</span>
-                          </button>
+                        <h2 className="text-3xl font-extrabold text-theme-black leading-tight mb-3 break-keep">{policy.policy_name}</h2>
+                        <p className="text-lg text-theme-venus mb-6">{policy.summary}</p>
+            
+                        <div className="bg-white/60 p-5 rounded-2xl shadow-inner-lg border border-gray-200/80 mb-8">
+                          <div className="flex items-center text-theme-pink mb-4">
+                            <PiggyBank className="w-7 h-7 mr-3" />
+                            <span className="text-lg font-bold">{details.benefitLabel}</span>
+                          </div>
+                          <p className="text-3xl font-bold text-theme-livid">{details.benefitValue}</p>
                         </div>
-                        <div className="space-y-4 mt-auto">
-                          <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                            <span className="text-sm text-theme-venus font-bold uppercase tracking-wider block mb-2">임대료 수준</span>
-                            <p className="text-2xl font-bold text-theme-livid">{policy.benefit || "상세 내용 참조"}</p>
-                          </div>
-                          <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                            <span className="text-sm text-theme-venus font-bold uppercase tracking-wider block mb-2">지원 방식</span>
-                            <p className="text-lg font-bold text-theme-black">{policy.limit || "제한 없음"}</p>
-                          </div>
+            
+                        <div className="mt-auto space-y-4">
+                           <button 
+                              className={`flex items-center justify-center w-full gap-2 py-3 rounded-xl border-2 transition-all duration-200 ${policy.isFavorite ? "bg-theme-pink border-theme-pink text-white shadow-lg" : "bg-white border-gray-300 text-gray-600 hover:border-theme-pink hover:text-theme-pink"}`}
+                              onClick={() => onToggle(policy.policy_id)} >
+                              <Heart className={`w-5 h-5 ${policy.isFavorite ? "fill-white" : ""}`} />
+                              <span className="font-semibold">{policy.isFavorite ? "관심 정책으로 저장됨" : "관심 정책 추가"}</span>
+                            </button>
+                            <Button onClick={handleGoToSite} size="lg" className="w-full bg-theme-livid hover:bg-theme-livid/90 text-white px-8 text-lg font-semibold shadow-lg hover:shadow-xl transition-all">
+                              신청하러 가기 <ExternalLink className="w-5 h-5 ml-2" />
+                            </Button>
                         </div>
                       </div>
-
-                      {/* [우측] 상세 내용 */}
-                      <div className="w-full md:w-[65%] flex flex-col bg-white">
-                        <div className="flex-1 p-6 sm:p-10 space-y-10">
+            
+                      {/* Right Pane */}
+                      <div className="w-full md:w-[60%] flex flex-col bg-white">
+                        <div className="flex-1 p-6 sm:p-8 space-y-8">
                           <section>
-                            <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-2"><span className="w-1 h-6 bg-theme-livid rounded-full"></span>어떤 정책인가요?</h3>
-                            <div className="text-gray-600 text-lg leading-8 whitespace-pre-wrap bg-gray-50 p-6 rounded-2xl border border-gray-100">{policy.desc || "상세 설명이 제공되지 않았습니다."}</div>
+                            <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-3"><FileText className="text-theme-livid"/>정책 소개</h3>
+                            <p className="text-gray-600 text-base leading-relaxed whitespace-pre-wrap bg-gray-50 p-6 rounded-xl border border-gray-100">{policy.desc || "상세 설명이 제공되지 않았습니다."}</p>
                           </section>
+                          
                           <section>
-                            <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-2"><span className="w-1 h-6 bg-theme-pink rounded-full"></span>상세 내용</h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <DetailItem label="거주 기간" value={policy.duration || "-"} />
-                              <DetailItem label="소득 기준" value={policy.priority || "-"} />
-                              <div className="sm:col-span-2">
-                                <DetailItem label="지원 한도" value={policy.benefit_detail || "-"} />
+                             <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-3"><Target className="text-theme-pink"/>신청 자격 및 상세 내용</h3>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                              <DetailItem icon={Calendar} label={details.durationLabel} value={details.durationValue} />
+                              <DetailItem icon={Users} label={details.priorityLabel} value={details.priorityValue} />
+                              <div className="lg:col-span-2">
+                                <DetailItem icon={Wallet} label={details.benefitDetailLabel} value={details.benefitDetailValue} />
                               </div>
                             </div>
                           </section>
+            
                           {policy.caution && (
                             <section>
-                              <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-2"><span className="w-1 h-6 bg-yellow-400 rounded-full"></span>주의 사항</h3>
-                              <div className="text-gray-600 text-lg leading-8 whitespace-pre-wrap bg-yellow-50 p-6 rounded-2xl border border-yellow-200">
-                                <div className="flex items-start">
-                                  <svg className="w-6 h-6 text-yellow-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                  <span>{policy.caution}</span>
-                                </div>
+                              <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-3"><AlertTriangle className="text-yellow-500"/>주의 사항</h3>
+                              <div className="text-gray-700 bg-yellow-50 p-5 rounded-xl border border-yellow-200/80 text-base flex items-start gap-3">
+                                <AlertTriangle className="w-5 h-5 text-yellow-500 mt-1 flex-shrink-0" />
+                                <span>{policy.caution}</span>
                               </div>
                             </section>
                           )}
                         </div>
-                        <div className="p-6 border-t border-gray-100 flex justify-end gap-3 bg-white/90 backdrop-blur-sm">
-                          <Button onClick={handleGoToSite} size="lg" className="bg-theme-livid hover:bg-theme-livid/90 text-white px-8 text-lg font-semibold shadow-lg hover:shadow-xl transition-all">신청하러 가기 <ExternalLink className="w-5 h-5 ml-2" /></Button>
-                        </div>
                       </div>
-                    </>
-                  )
-                } 
-                // 주택공급 & (공공분양 or 민간분양)
-                else if (policy.category === '주택공급' && (policy.policy_type === '공공분양' || policy.policy_type === '민간분양')) {
-                  return (
-                    <>
-                      {/* [좌측] 헤더 및 요약 정보 */}
-                      <div className="w-full md:w-[35%] bg-theme-bonjour/30 p-6 sm:p-8 flex flex-col border-r border-gray-100">
-                        <div className="flex flex-wrap gap-2 mb-6">
-                          <Badge className="bg-theme-livid text-white px-3 py-1 text-sm rounded-md shadow-sm">{policy.category || "정책"}</Badge>
-                          <Badge variant="outline" className="border-theme-venus/50 text-theme-venus bg-white">{policy.region}</Badge>
-                        </div>
-                        <h2 className="text-3xl font-extrabold text-theme-black leading-tight mb-6 break-keep">{policy.policy_name}</h2>
-                        <div className="mb-8">
-                          <button 
-                            className={`flex items-center justify-center w-full gap-2 py-3 rounded-xl border transition-all duration-200 ${policy.isFavorite ? "bg-theme-pink/10 border-theme-pink text-theme-pink" : "bg-white border-gray-200 text-gray-500 hover:border-theme-pink hover:text-theme-pink"}`}
-                            onClick={() => onToggle(policy.policy_id)}
-                          >
-                            <Heart className={`w-5 h-5 ${policy.isFavorite ? "fill-theme-pink" : ""}`} />
-                            <span className="font-semibold">{policy.isFavorite ? "관심 정책에 저장됨" : "관심 정책으로 저장"}</span>
-                          </button>
-                        </div>
-                        <div className="space-y-4 mt-auto">
-                          <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                            <span className="text-sm text-theme-venus font-bold uppercase tracking-wider block mb-2">분양가</span>
-                            <p className="text-2xl font-bold text-theme-livid">{policy.benefit || "상세 내용 참조"}</p>
-                          </div>
-                          <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                            <span className="text-sm text-theme-venus font-bold uppercase tracking-wider block mb-2">지원 방식</span>
-                            <p className="text-lg font-bold text-theme-black">{policy.limit || "제한 없음"}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* [우측] 상세 내용 */}
-                      <div className="w-full md:w-[65%] flex flex-col bg-white">
-                        <div className="flex-1 p-6 sm:p-10 space-y-10">
-                          <section>
-                            <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-2"><span className="w-1 h-6 bg-theme-livid rounded-full"></span>어떤 정책인가요?</h3>
-                            <div className="text-gray-600 text-lg leading-8 whitespace-pre-wrap bg-gray-50 p-6 rounded-2xl border border-gray-100">{policy.desc || "상세 설명이 제공되지 않았습니다."}</div>
-                          </section>
-                          <section>
-                            <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-2"><span className="w-1 h-6 bg-theme-pink rounded-full"></span>상세 내용</h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <DetailItem label="거주 기간" value={policy.duration || "-"} />
-                              <DetailItem label="조건" value={policy.priority || "-"} />
-                              <div className="sm:col-span-2">
-                                <DetailItem label="지원 내용" value={policy.benefit_detail || "-"} />
-                              </div>
-                            </div>
-                          </section>
-                          {policy.caution && (
-                            <section>
-                            <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-2"><span className="w-1 h-6 bg-yellow-400 rounded-full"></span>주의 사항</h3>
-                            <div className="text-gray-600 text-lg leading-8 whitespace-pre-wrap bg-yellow-50 p-6 rounded-2xl border border-yellow-200">
-                              <div className="flex items-start">
-                                <svg className="w-6 h-6 text-yellow-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                <span>{policy.caution}</span>
-                              </div>
-                            </div>
-                          </section>
-                          )}
-                        </div>
-                        <div className="p-6 border-t border-gray-100 flex justify-end gap-3 bg-white/90 backdrop-blur-sm">
-                          <Button onClick={handleGoToSite} size="lg" className="bg-theme-livid hover:bg-theme-livid/90 text-white px-8 text-lg font-semibold shadow-lg hover:shadow-xl transition-all">신청하러 가기 <ExternalLink className="w-5 h-5 ml-2" /></Button>
-                        </div>
-                      </div>
-                    </>
-                  )
+                    </div>
+                  );
                 }
-                // 기본 템플릿
-                else {
-                  return (
-                    <>
-                      {/* [좌측] 헤더 및 요약 정보 (35% 너비) */}
-                      <div className="w-full md:w-[35%] bg-theme-bonjour/30 p-6 sm:p-8 flex flex-col border-r border-gray-100">
-                        <div className="flex flex-wrap gap-2 mb-6">
-                           <Badge className="bg-theme-livid text-white px-3 py-1 text-sm rounded-md shadow-sm">{policy.category || "정책"}</Badge>
-                           <Badge variant="outline" className="border-theme-venus/50 text-theme-venus bg-white">{policy.region}</Badge>
+            
+                // Default template
+                return (
+                  <div className="flex h-full flex-col md:flex-row">
+                    <div className="w-full md:w-[35%] bg-theme-bonjour/30 p-6 sm:p-8 flex flex-col border-r border-gray-100">
+                      <div className="flex flex-wrap gap-2 mb-6">
+                        <Badge className="bg-theme-livid text-white px-3 py-1 text-sm rounded-md shadow-sm">{policy.category || "정책"}</Badge>
+                        <Badge variant="outline" className="border-theme-venus/50 text-theme-venus bg-white">{policy.region}</Badge>
+                      </div>
+                      <h2 className="text-3xl font-extrabold text-theme-black leading-tight mb-6 break-keep">{policy.policy_name}</h2>
+                      <div className="mb-8">
+                        <button className={`flex items-center justify-center w-full gap-2 py-3 rounded-xl border transition-all duration-200 ${policy.isFavorite ? "bg-theme-pink/10 border-theme-pink text-theme-pink" : "bg-white border-gray-200 text-gray-500 hover:border-theme-pink hover:text-theme-pink"}`} onClick={() => onToggle(policy.policy_id)}>
+                          <Heart className={`w-5 h-5 ${policy.isFavorite ? "fill-theme-pink" : ""}`} />
+                          <span className="font-semibold">{policy.isFavorite ? "관심 정책에 저장됨" : "관심 정책으로 저장"}</span>
+                        </button>
+                      </div>
+                      <div className="space-y-4 mt-auto">
+                        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                          <span className="text-sm text-theme-venus font-bold uppercase tracking-wider block mb-2">지원 금액</span>
+                          <p className="text-2xl font-bold text-theme-livid">{policy.max_benefit_amount ? `${(policy.max_benefit_amount / 10000).toLocaleString()}만원` : "상세 내용 참조"}<span className="text-sm font-normal text-gray-500 ml-1">최대</span></p>
                         </div>
-                        <h2 className="text-3xl font-extrabold text-theme-black leading-tight mb-6 break-keep">{policy.policy_name}</h2>
-                        <div className="mb-8">
-                          <button 
-                            className={`flex items-center justify-center w-full gap-2 py-3 rounded-xl border transition-all duration-200 ${policy.isFavorite ? "bg-theme-pink/10 border-theme-pink text-theme-pink" : "bg-white border-gray-200 text-gray-500 hover:border-theme-pink hover:text-theme-pink"}`}
-                            onClick={() => onToggle(policy.policy_id)}
-                          >
-                            <Heart className={`w-5 h-5 ${policy.isFavorite ? "fill-theme-pink" : ""}`} />
-                            <span className="font-semibold">{policy.isFavorite ? "관심 정책에 저장됨" : "관심 정책으로 저장"}</span>
-                          </button>
-                        </div>
-                        <div className="space-y-4 mt-auto">
-                          <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                             <span className="text-sm text-theme-venus font-bold uppercase tracking-wider block mb-2">지원 금액</span>
-                             <p className="text-2xl font-bold text-theme-livid">
-                                {policy.max_benefit_amount ? `${(policy.max_benefit_amount / 10000).toLocaleString()}만원` : "상세 내용 참조"}
-                                <span className="text-sm font-normal text-gray-500 ml-1">최대</span>
-                             </p>
-                          </div>
-                          <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                             <span className="text-sm text-theme-venus font-bold uppercase tracking-wider block mb-2">대상 주택</span>
-                             <p className="text-lg font-bold text-theme-black">{policy.max_house_price ? `${(policy.max_house_price / 100000000).toFixed(1)}억 이하` : "제한 없음"}</p>
-                          </div>
+                        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                           <span className="text-sm text-theme-venus font-bold uppercase tracking-wider block mb-2">대상 주택</span>
+                           <p className="text-lg font-bold text-theme-black">{policy.max_house_price ? `${(policy.max_house_price / 100000000).toFixed(1)}억 이하` : "제한 없음"}</p>
                         </div>
                       </div>
-      
-                      {/* [우측] 상세 내용 (65% 너비) */}
-                      <div className="w-full md:w-[65%] flex flex-col bg-white">
-                        <div className="flex-1 p-6 sm:p-10 space-y-10">
-                          <section>
-                            <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-2"><span className="w-1 h-6 bg-theme-livid rounded-full"></span>어떤 정책인가요?</h3>
-                            <div className="text-gray-600 text-lg leading-8 whitespace-pre-wrap bg-gray-50 p-6 rounded-2xl border border-gray-100">{policy.desc || "상세 설명이 제공되지 않았습니다."}</div>
-                          </section>
-                          <section>
-                            <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-2"><span className="w-1 h-6 bg-theme-pink rounded-full"></span>누가 신청할 수 있나요?</h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                               <DetailItem label="거주 지역" value={policy.region} />
-                               <DetailItem label="정책 유형" value={policy.policy_type} />
-                               <DetailItem label="최대 대출/지원 기간" value={policy.max_duration_year ? `${policy.max_duration_year}년` : "-"} />
-                               <DetailItem label="금리 수준" value={policy.min_rate ? `${policy.min_rate}% ~ ${policy.max_rate}%` : "-"} />
-                            </div>
-                          </section>
-                        </div>
-                        <div className="p-6 border-t border-gray-100 flex justify-end gap-3 bg-white/90 backdrop-blur-sm">
-                          <Button onClick={handleGoToSite} size="lg" className="bg-theme-livid hover:bg-theme-livid/90 text-white px-8 text-lg font-semibold shadow-lg hover:shadow-xl transition-all">신청하러 가기 <ExternalLink className="w-5 h-5 ml-2" /></Button>
-                        </div>
+                    </div>
+                    <div className="w-full md:w-[65%] flex flex-col bg-white">
+                      <div className="flex-1 p-6 sm:p-10 space-y-10">
+                        <section>
+                          <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-2"><span className="w-1 h-6 bg-theme-livid rounded-full"></span>어떤 정책인가요?</h3>
+                          <div className="text-gray-600 text-lg leading-8 whitespace-pre-wrap bg-gray-50 p-6 rounded-2xl border border-gray-100">{policy.desc || "상세 설명이 제공되지 않았습니다."}</div>
+                        </section>
+                        <section>
+                           <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-2"><span className="w-1 h-6 bg-theme-pink rounded-full"></span>누가 신청할 수 있나요?</h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <DetailItem label="거주 지역" value={policy.region} />
+                            <DetailItem label="정책 유형" value={policy.policy_type} />
+                            <DetailItem label="최대 대출/지원 기간" value={policy.max_duration_year ? `${policy.max_duration_year}년` : "-"} />
+                            <DetailItem label="금리 수준" value={policy.min_rate ? `${policy.min_rate}% ~ ${policy.max_rate}%` : "-"} />
+                          </div>
+                        </section>
                       </div>
-                    </>
-                  )
-                }
-              }
+                      <div className="p-6 border-t border-gray-100 flex justify-end gap-3 bg-white/90 backdrop-blur-sm">
+                        <Button onClick={handleGoToSite} size="lg" className="bg-theme-livid hover:bg-theme-livid/90 text-white px-8 text-lg font-semibold shadow-lg hover:shadow-xl transition-all">신청하러 가기 <ExternalLink className="w-5 h-5 ml-2" /></Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              };
             
               return (
                 <>
-                  {/* 1. 커스텀 애니메이션 정의 (Style 태그 삽입) */}
                   <style>{`
-                    @keyframes spring-pop {
-                      0% { transform: scale(0.8); opacity: 0; }
-                      50% { transform: scale(1.02); opacity: 1; }
-                      100% { transform: scale(1); opacity: 1; }
-                    }
-                    .animate-spring-pop {
-                      animation: spring-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-                    }
+                    @keyframes spring-pop { 0% { transform: scale(0.8); opacity: 0; } 50% { transform: scale(1.02); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+                    .animate-spring-pop { animation: spring-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+                    .shadow-inner-lg { box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05); }
                   `}</style>
-            
-                  {/* 2. 배경 (Backdrop) */}
-                  <div 
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300"
-                    onClick={onClose}
-                  >
-                    {/* 3. 모달 컨텐츠 (대형 사이즈 & 팝업 애니메이션 적용) */}
-                    <div 
-                      className="bg-white w-full max-w-6xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col relative animate-spring-pop overflow-y-auto custom-scrollbar"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {/* 닫기 버튼 */}
-                      <button 
-                        onClick={onClose}
-                        className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-black transition-colors z-20"
-                      >
-                        <X className="w-6 h-6" />
-                      </button>
-            
-                      <div className="flex h-full flex-col md:flex-row">
-                        {renderDetails()}
-                      </div>
+                  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300" onClick={onClose}>
+                    <div className="bg-white w-full max-w-6xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col relative animate-spring-pop overflow-y-auto custom-scrollbar" onClick={(e) => e.stopPropagation()}>
+                      <button onClick={onClose} className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-black transition-colors z-20"><X className="w-6 h-6" /></button>
+                      {renderContent()}
                     </div>
                   </div>
                 </>
               );
             };
             
-            // [보조 컴포넌트] 상세 정보 아이템 (반복되는 디자인 통일)
-            const DetailItem = ({ label, value }) => (
-              <div className="flex flex-col p-4 rounded-xl border border-gray-100 bg-white hover:border-theme-venus/30 transition-colors">
-                <span className="text-sm text-theme-venus mb-1">{label}</span>
+            const DetailItem = ({ icon: Icon, label, value }) => (
+              <div className="flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white hover:border-theme-venus/30 transition-colors shadow-sm">
+                <div className="flex items-center text-sm text-theme-venus mb-2">
+                  {Icon && <Icon className="w-4 h-4 mr-2" />}
+                  <span>{label}</span>
+                </div>
                 <span className="text-lg font-medium text-theme-black">{value}</span>
               </div>
             );

@@ -33,6 +33,7 @@ def init_db():
         """)
 
         # [부모] policies_output
+        # cursor.execute("DROP TABLE IF EXISTS policies_output CASCADE;") # CASCADE로 의존성 있는 객체도 함께 삭제
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS policies_output (
                 policy_id INT PRIMARY KEY,
