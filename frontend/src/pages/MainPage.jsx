@@ -785,16 +785,16 @@ const MainPage = () => {
                     <div className="grid [grid-template-areas:'card'] w-full h-full">
                         {/* Back face (for sizing) */}
                         <div
-                            className="[grid-area:card] flip-card-back flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white invisible"
+                            className="[grid-area:card] flip-card-back flex flex-col p-3 rounded-xl border border-gray-200/80 bg-white invisible"
                         >
-                            <div className="text-xs text-theme-black whitespace-pre-wrap leading-normal">
+                            <div className="text-xs text-theme-black whitespace-pre-wrap leading-snug">
                               {backValue}
                             </div>
                         </div>
 
                         {/* Front face (for sizing) */}
-                        <div className="[grid-area:card] flip-card-front flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white invisible">
-                          <div className="flex items-center text-sm text-theme-venus mb-2">
+                        <div className="[grid-area:card] flip-card-front flex flex-col p-3 rounded-xl border border-gray-200/80 bg-white invisible">
+                          <div className="flex items-center text-sm text-theme-venus mb-1.5">
                             {Icon && <Icon className="w-4 h-4 mr-2" />}
                             <span>{frontTitle}</span>
                             {canFlip && (
@@ -808,20 +808,20 @@ const MainPage = () => {
 
                     {/* Back face (visible) */}
                     <div
-                        className="absolute top-0 left-0 [grid-area:card] flip-card-back flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white w-full h-full"
+                        className="absolute top-0 left-0 [grid-area:card] flip-card-back flex flex-col p-3 rounded-xl border border-gray-200/80 bg-white w-full h-full"
                         style={{
                             backfaceVisibility: 'hidden',
                             transform: 'rotateY(180deg)',
                         }}
                     >
-                        <div className="text-xs text-theme-black whitespace-pre-wrap leading-normal">
+                        <div className="text-xs text-theme-black whitespace-pre-wrap leading-snug">
                           {backValue.replace(/\n\s*\n/g, '\n')}
                         </div>
                     </div>
 
                     {/* Front face (visible) */}
-                    <div className="absolute top-0 left-0 [grid-area:card] flip-card-front flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white hover:border-theme-venus/30 transition-colors shadow-sm w-full h-full" style={{ backfaceVisibility: 'hidden' }}>
-                      <div className="flex items-center text-sm text-theme-venus mb-2">
+                    <div className="absolute top-0 left-0 [grid-area:card] flip-card-front flex flex-col p-3 rounded-xl border border-gray-200/80 bg-white hover:border-theme-venus/30 transition-colors shadow-sm w-full h-full" style={{ backfaceVisibility: 'hidden' }}>
+                      <div className="flex items-center text-sm text-theme-venus mb-1.5">
                         {Icon && <Icon className="w-4 h-4 mr-2" />}
                         <span>{frontTitle}</span>
                         {canFlip && (
@@ -945,7 +945,7 @@ const MainPage = () => {
                             
                             <section>
                                <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-3"><Target className="text-theme-pink"/>신청 자격 및 상세 내용</h3>
-                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                                 <FlippableBox icon={Calendar} frontTitle={details.durationLabel} frontValue={details.durationFront} backValue={details.durationBack} />
                                 <FlippableBox icon={Users} frontTitle={details.priorityLabel} frontValue={details.priorityFront} backValue={details.priorityBack} />
                                 <DetailItem icon={Wallet} label={details.targetBeneficiaryLabel} value={details.targetBeneficiaryValue} />
@@ -973,12 +973,12 @@ const MainPage = () => {
             };
             
             const DetailItem = ({ icon: Icon, label, value }) => (
-              <div className="flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white hover:border-theme-venus/30 transition-colors shadow-sm h-full">
-                <div className="flex items-center text-sm text-theme-venus mb-2">
+              <div className="flex flex-col p-3 rounded-xl border border-gray-200/80 bg-white hover:border-theme-venus/30 transition-colors shadow-sm h-full">
+                <div className="flex items-center text-sm text-theme-venus mb-1.5">
                   {Icon && <Icon className="w-4 h-4 mr-2" />}
                   <span>{label}</span>
                 </div>
-                <span className="text-base font-medium text-theme-black whitespace-pre-wrap leading-normal">{(value || '').replace(/\n\s*\n/g, '\n')}</span>
+                <span className="text-base font-medium text-theme-black whitespace-pre-wrap leading-snug">{(value || '').replace(/\n\s*\n/g, '\n')}</span>
               </div>
             );
             
