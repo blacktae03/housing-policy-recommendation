@@ -801,7 +801,7 @@ const MainPage = () => {
                               <RefreshCw className="w-4 h-4 ml-auto text-gray-400 group-hover:text-theme-livid transition-transform duration-300 group-hover:rotate-180" />
                             )}
                           </div>
-                          <span className="text-lg font-semibold text-theme-black">{frontValue}</span>
+                          <span className="text-lg font-medium text-theme-black">{frontValue}</span>
                         </div>
                     </div>
 
@@ -828,7 +828,7 @@ const MainPage = () => {
                           <RefreshCw className="w-4 h-4 ml-auto text-gray-400 group-hover:text-theme-livid transition-transform duration-300 group-hover:rotate-180" />
                         )}
                       </div>
-                      <span className="text-lg font-semibold text-theme-black">{frontValue}</span>
+                      <span className="text-lg font-medium text-theme-black">{frontValue}</span>
                     </div>
 
                   </div>
@@ -978,7 +978,7 @@ const MainPage = () => {
                   {Icon && <Icon className="w-5 h-5 mr-2" />}
                   <span>{label}</span>
                 </div>
-                <span className="text-lg font-semibold text-theme-black whitespace-pre-wrap leading-relaxed">{(value || '').replace(/\n\s*\n/g, '\n')}</span>
+                <span className="text-lg font-medium text-theme-black whitespace-pre-wrap leading-relaxed">{(value || '').replace(/\n\s*\n/g, '\n')}</span>
               </div>
             );
             
