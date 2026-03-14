@@ -34,3 +34,12 @@ backend/test.py
 *.pem
 
 *.sql
+
+*백업.csv
+
+*.md
+!README.md
+
+*.png
+
+*.pages

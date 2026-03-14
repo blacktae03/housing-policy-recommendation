@@ -29,7 +29,7 @@ app = FastAPI()
 router = APIRouter(prefix="/api")
 
 origins = [
-    "http://localhost:5173",
+    "http://localhost:5174",
     "https://jipsalddae.co.kr",        # 구매하신 도메인 (HTTPS 필수)
     "https://www.jipsalddae.co.kr",    # www 포함 버전도 추가
 ]

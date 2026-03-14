@@ -134,8 +134,8 @@ def init_db():
                 df = pd.read_csv(file_path).where(pd.notnull(pd.read_csv(file_path)), None)
                 for _, row in df.iterrows():
                     cursor.execute("""
-                        INSERT INTO policies_output (policy_id, visit_count, policy_name, category, policy_type, max_house_price, region, max_benefit_amount, min_rate, max_rate, house_size, max_duration_year, policy_url, "desc")
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        INSERT INTO policies_output (policy_id, visit_count, policy_name, category, policy_type, max_house_price, region, max_benefit_amount, min_rate, max_rate, house_size, max_duration_year, policy_url, "desc", summary, benefit, benefit_detail, limit, duration, priority, caution)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """, tuple(row))
                 print(f"✅ {file_path} 데이터 입력 완료")
 
