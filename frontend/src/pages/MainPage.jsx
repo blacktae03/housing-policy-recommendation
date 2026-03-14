@@ -770,19 +770,71 @@ const MainPage = () => {
             
               return (
                 <div
-                  className={`relative rounded-xl group transition-all duration-300 ${canFlip ? 'cursor-pointer' : ''}`}
+                  className={`flip-card group h-full ${canFlip ? 'cursor-pointer' : ''}`}
                   onClick={handleFlip}
                 >
                   <div
-                    className="flip-card-inner"
+                    className="flip-card-inner relative w-full h-full"
                     style={{
                       transformStyle: 'preserve-3d',
                       transition: 'transform 0.6s',
                       transform: isFlipped ? 'rotateY(180deg)' : 'none',
                     }}
                   >
-                    {/* Front */}
-                    <div className="flip-card-front flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white hover:border-theme-venus/30 transition-colors shadow-sm h-full">
+                    {/* Grid container to stack front and back for auto-height */}
+                    <div className="grid [grid-template-areas:'card'] w-full h-full">
+                        {/* Back face (for sizing) */}
+                        <div
+                            className="[grid-area:card] flip-card-back flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white invisible"
+                        >
+                            <div className="flex items-center text-sm text-theme-venus mb-2">
+                               {Icon && <Icon className="w-4 h-4 mr-2" />}
+                               <span>{frontTitle}</span>
+                               {canFlip && (
+                                <RefreshCw className="w-4 h-4 ml-auto text-gray-400" />
+                               )}
+                            </div>
+                            <div className="text-sm text-theme-black whitespace-pre-wrap">
+                              {backValue}
+                            </div>
+                        </div>
+
+                        {/* Front face (for sizing) */}
+                        <div className="[grid-area:card] flip-card-front flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white invisible">
+                          <div className="flex items-center text-sm text-theme-venus mb-2">
+                            {Icon && <Icon className="w-4 h-4 mr-2" />}
+                            <span>{frontTitle}</span>
+                            {canFlip && (
+                              <RefreshCw className="w-4 h-4 ml-auto text-gray-400 group-hover:text-theme-livid transition-transform duration-300 group-hover:rotate-180" />
+                            )}
+                          </div>
+                          <span className="text-lg font-medium text-theme-black line-clamp-2">{frontValue}</span>
+                        </div>
+                    </div>
+
+
+                    {/* Back face (visible) */}
+                    <div
+                        className="absolute top-0 left-0 [grid-area:card] flip-card-back flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white w-full h-full"
+                        style={{
+                            backfaceVisibility: 'hidden',
+                            transform: 'rotateY(180deg)',
+                        }}
+                    >
+                        <div className="flex items-center text-sm text-theme-venus mb-2">
+                           {Icon && <Icon className="w-4 h-4 mr-2" />}
+                           <span>{frontTitle}</span>
+                           {canFlip && (
+                            <RefreshCw className="w-4 h-4 ml-auto text-gray-400" />
+                           )}
+                        </div>
+                        <div className="text-sm text-theme-black whitespace-pre-wrap">
+                          {backValue}
+                        </div>
+                    </div>
+
+                    {/* Front face (visible) */}
+                    <div className="absolute top-0 left-0 [grid-area:card] flip-card-front flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white hover:border-theme-venus/30 transition-colors shadow-sm w-full h-full" style={{ backfaceVisibility: 'hidden' }}>
                       <div className="flex items-center text-sm text-theme-venus mb-2">
                         {Icon && <Icon className="w-4 h-4 mr-2" />}
                         <span>{frontTitle}</span>
@@ -792,28 +844,7 @@ const MainPage = () => {
                       </div>
                       <span className="text-lg font-medium text-theme-black line-clamp-2">{frontValue}</span>
                     </div>
-            
-                    {/* Back */}
-                    <div
-                      className="flip-card-back absolute top-0 left-0 w-full h-full p-4 rounded-xl border border-gray-200/80 bg-white"
-                      style={{
-                        backfaceVisibility: 'hidden',
-                        transform: 'rotateY(180deg)',
-                      }}
-                    >
-                      <div className="flex flex-col h-full">
-                        <div className="flex items-center text-sm text-theme-venus mb-2">
-                           {Icon && <Icon className="w-4 h-4 mr-2" />}
-                           <span>{frontTitle} (상세)</span>
-                           {canFlip && (
-                            <RefreshCw className="w-4 h-4 ml-auto text-gray-400" />
-                           )}
-                        </div>
-                        <div className="flex-1 overflow-y-auto text-sm text-theme-black custom-scrollbar">
-                          {backValue}
-                        </div>
-                      </div>
-                    </div>
+
                   </div>
                 </div>
               );
@@ -941,7 +972,7 @@ const MainPage = () => {
                                 <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-3"><AlertTriangle className="text-yellow-500"/>주의 사항</h3>
                                 <div className="text-gray-700 bg-yellow-50 p-5 rounded-xl border border-yellow-200/80 text-base flex items-start gap-3">
                                   <AlertTriangle className="w-5 h-5 text-yellow-500 mt-1 flex-shrink-0" />
-                                  <span>{policy.caution}</span>
+                                  <span className="whitespace-pre-wrap">{policy.caution}</span>
                                 </div>
                               </section>
                             )}
@@ -961,7 +992,7 @@ const MainPage = () => {
                   {Icon && <Icon className="w-4 h-4 mr-2" />}
                   <span>{label}</span>
                 </div>
-                <span className="text-lg font-medium text-theme-black line-clamp-2">{value}</span>
+                <span className="text-lg font-medium text-theme-black whitespace-pre-wrap">{value}</span>
               </div>
             );
             
