@@ -756,86 +756,79 @@ const MainPage = () => {
             // ★ [추가] 상세 보기(확대) 모달 컴포넌트
             // ★ [수정됨] 대형 사이즈 & 팝업 모션이 적용된 상세 모달
             const FlippableBox = ({ frontTitle, frontValue, backValue, icon: Icon }) => {
-              const [isFlipped, setIsFlipped] = useState(false);
+                          const [isFlipped, setIsFlipped] = useState(false);
+                        
+                          // frontValue나 backValue가 비어있거나 "-"일 경우 뒤집기 기능을 비활성화
+                          const canFlip = frontValue && frontValue !== '-' && backValue && backValue !== '-';
+                        
+                          const handleFlip = (e) => {
+                            e.stopPropagation();
+                            if (canFlip) {
+                              setIsFlipped(!isFlipped);
+                            }
+                          };
+                        
+                          return (
+                            <div
+                              className={`flip-card group h-[150px] ${canFlip ? 'cursor-pointer' : ''}`}
+                              onClick={handleFlip}
+                            >
+                              <div
+                                className="flip-card-inner relative w-full h-full"
+                                style={{
+                                  transformStyle: 'preserve-3d',
+                                  transition: 'transform 0.6s',
+                                  transform: isFlipped ? 'rotateY(180deg)' : 'none',
+                                }}
+                              >
+                                {/* Grid container to stack front and back for auto-height */}
+                                <div className="grid [grid-template-areas:'card'] w-full h-full">
+                                    {/* Back face (for sizing) */}
+                                    <div
+                                        className="[grid-area:card] flip-card-back flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white invisible"
+                                    >
+                                        <div className="text-sm text-theme-black whitespace-pre-wrap leading-relaxed">
+                                          {backValue}
+                                        </div>
+                                    </div>
             
-              // frontValue나 backValue가 비어있거나 "-"일 경우 뒤집기 기능을 비활성화
-              const canFlip = frontValue && frontValue !== '-' && backValue && backValue !== '-';
+                                    {/* Front face (for sizing) */}
+                                    <div className="[grid-area:card] flip-card-front flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white invisible">
+                                      <div className="flex items-center text-base text-theme-venus mb-2">
+                                        {Icon && <Icon className="w-5 h-5 mr-2" />}
+                                        <span>{frontTitle}</span>
+                                      </div>
+                                      <span className="text-lg font-medium text-theme-black">{frontValue}</span>
+                                    </div>
+                                </div>
             
-              const handleFlip = (e) => {
-                e.stopPropagation();
-                if (canFlip) {
-                  setIsFlipped(!isFlipped);
-                }
-              };
             
-              return (
-                <div
-                  className={`flip-card group h-[100px] ${canFlip ? 'cursor-pointer' : ''}`}
-                  onClick={handleFlip}
-                >
-                  <div
-                    className="flip-card-inner relative w-full h-full"
-                    style={{
-                      transformStyle: 'preserve-3d',
-                      transition: 'transform 0.6s',
-                      transform: isFlipped ? 'rotateY(180deg)' : 'none',
-                    }}
-                  >
-                    {/* Grid container to stack front and back for auto-height */}
-                    <div className="grid [grid-template-areas:'card'] w-full h-full">
-                        {/* Back face (for sizing) */}
-                        <div
-                            className="[grid-area:card] flip-card-back flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white invisible"
-                        >
-                            <div className="text-sm text-theme-black whitespace-pre-wrap leading-relaxed">
-                              {backValue}
+                                {/* Back face (visible) */}
+                                <div
+                                    className="absolute top-0 left-0 [grid-area:card] flip-card-back flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white w-full h-full"
+                                    style={{
+                                        backfaceVisibility: 'hidden',
+                                        transform: 'rotateY(180deg)',
+                                    }}
+                                >
+                                    <div className="text-sm text-theme-black whitespace-pre-wrap leading-relaxed">
+                                      {backValue.replace(/\n\s*\n/g, '\n')}
+                                    </div>
+                                </div>
+            
+                                {/* Front face (visible) */}
+                                <div className="absolute top-0 left-0 [grid-area:card] flip-card-front flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white hover:border-theme-venus/30 transition-colors shadow-sm w-full h-full" style={{ backfaceVisibility: 'hidden' }}>
+                                  <div className="flex items-center text-base text-theme-venus mb-2">
+                                    {Icon && <Icon className="w-5 h-5 mr-2" />}
+                                    <span>{frontTitle}</span>
+                                  </div>
+                                  <span className="text-lg font-medium text-theme-black">{frontValue}</span>
+                                </div>
+            
+                              </div>
                             </div>
-                        </div>
-
-                        {/* Front face (for sizing) */}
-                        <div className="[grid-area:card] flip-card-front flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white invisible">
-                          <div className="flex items-center text-base text-theme-venus mb-2">
-                            {Icon && <Icon className="w-5 h-5 mr-2" />}
-                            <span>{frontTitle}</span>
-                            {canFlip && (
-                              <RefreshCw className="w-4 h-4 ml-auto text-gray-400 group-hover:text-theme-livid transition-transform duration-300 group-hover:rotate-180" />
-                            )}
-                          </div>
-                          <span className="text-lg font-medium text-theme-black">{frontValue}</span>
-                        </div>
-                    </div>
-
-
-                    {/* Back face (visible) */}
-                    <div
-                        className="absolute top-0 left-0 [grid-area:card] flip-card-back flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white w-full h-full"
-                        style={{
-                            backfaceVisibility: 'hidden',
-                            transform: 'rotateY(180deg)',
-                        }}
-                    >
-                        <div className="text-sm text-theme-black whitespace-pre-wrap leading-relaxed">
-                          {backValue.replace(/\n\s*\n/g, '\n')}
-                        </div>
-                    </div>
-
-                    {/* Front face (visible) */}
-                    <div className="absolute top-0 left-0 [grid-area:card] flip-card-front flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white hover:border-theme-venus/30 transition-colors shadow-sm w-full h-full" style={{ backfaceVisibility: 'hidden' }}>
-                      <div className="flex items-center text-base text-theme-venus mb-2">
-                        {Icon && <Icon className="w-5 h-5 mr-2" />}
-                        <span>{frontTitle}</span>
-                        {canFlip && (
-                          <RefreshCw className="w-4 h-4 ml-auto text-gray-400 group-hover:text-theme-livid transition-transform duration-300 group-hover:rotate-180" />
-                        )}
-                      </div>
-                      <span className="text-lg font-medium text-theme-black">{frontValue}</span>
-                    </div>
-
-                  </div>
-                </div>
-              );
-            };
-            
+                          );
+                        };            
             
             const PolicyDetailModal = ({ policy, onClose, onToggle }) => {
               const handleGoToSite = () => {
