@@ -48,7 +48,14 @@ def init_db():
                 house_size VARCHAR(100),
                 max_duration_year VARCHAR(100),
                 policy_url TEXT,
-                "desc" TEXT
+                "desc" TEXT,
+                summary TEXT,
+                benefit TEXT,
+                benefit_detail TEXT,
+                limit TEXT,
+                duration TEXT,
+                priority TEXT,
+                caution TEXT
             );
         """)
 
