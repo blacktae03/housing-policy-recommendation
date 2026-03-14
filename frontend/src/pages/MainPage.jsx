@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 // [수정] X 아이콘, ExternalLink, 화살표 아이콘 추가
-import { Home, User, LogOut, Heart, Search, ChevronLeft, ChevronRight, X, ExternalLink, ArrowUp, ArrowDown, Building, PiggyBank, Users, Info, AlertTriangle, FileText, Target, Calendar, Wallet } from "lucide-react";
+import { Home, User, LogOut, Heart, Search, ChevronLeft, ChevronRight, X, ExternalLink, ArrowUp, ArrowDown, Building, PiggyBank, Users, Info, AlertTriangle, FileText, Target, Calendar, Wallet, RefreshCw } from "lucide-react";
 import api from "@/api/axios";
 import logoImg from "@/assets/logo.png";
 
@@ -755,25 +755,71 @@ const MainPage = () => {
             
             // ★ [추가] 상세 보기(확대) 모달 컴포넌트
             // ★ [수정됨] 대형 사이즈 & 팝업 모션이 적용된 상세 모달
-            const FlippableDetailItem = ({ label, value }) => {
+            const FlippableBox = ({ frontTitle, frontValue, backValue, icon: Icon }) => {
               const [isFlipped, setIsFlipped] = useState(false);
             
+              // frontValue나 backValue가 비어있거나 "-"일 경우 뒤집기 기능을 비활성화
+              const canFlip = frontValue && frontValue !== '-' && backValue && backValue !== '-';
+            
+              const handleFlip = (e) => {
+                e.stopPropagation();
+                if (canFlip) {
+                  setIsFlipped(!isFlipped);
+                }
+              };
+            
               return (
-                <div className={`flip-card ${isFlipped ? 'flipped' : ''}`} onClick={() => setIsFlipped(!isFlipped)}>
-                  <div className="flip-card-inner">
-                    <div className="flip-card-front">
-                      <DetailItem label={label} value={value} />
+                <div
+                  className={`relative rounded-xl group transition-all duration-300 ${canFlip ? 'cursor-pointer' : ''}`}
+                  onClick={handleFlip}
+                >
+                  <div
+                    className="flip-card-inner"
+                    style={{
+                      transformStyle: 'preserve-3d',
+                      transition: 'transform 0.6s',
+                      transform: isFlipped ? 'rotateY(180deg)' : 'none',
+                    }}
+                  >
+                    {/* Front */}
+                    <div className="flip-card-front flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white hover:border-theme-venus/30 transition-colors shadow-sm h-full">
+                      <div className="flex items-center text-sm text-theme-venus mb-2">
+                        {Icon && <Icon className="w-4 h-4 mr-2" />}
+                        <span>{frontTitle}</span>
+                        {canFlip && (
+                          <RefreshCw className="w-4 h-4 ml-auto text-gray-400 group-hover:text-theme-livid transition-transform duration-300 group-hover:rotate-180" />
+                        )}
+                      </div>
+                      <span className="text-lg font-medium text-theme-black line-clamp-2">{frontValue}</span>
                     </div>
-                    <div className="flip-card-back">
-                      <div className="flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white shadow-sm h-full justify-center items-center">
-                        <p className="text-theme-black">Detail Test</p>
+            
+                    {/* Back */}
+                    <div
+                      className="flip-card-back absolute top-0 left-0 w-full h-full p-4 rounded-xl border border-gray-200/80 bg-white"
+                      style={{
+                        backfaceVisibility: 'hidden',
+                        transform: 'rotateY(180deg)',
+                      }}
+                    >
+                      <div className="flex flex-col h-full">
+                        <div className="flex items-center text-sm text-theme-venus mb-2">
+                           {Icon && <Icon className="w-4 h-4 mr-2" />}
+                           <span>{frontTitle} (상세)</span>
+                           {canFlip && (
+                            <RefreshCw className="w-4 h-4 ml-auto text-gray-400" />
+                           )}
+                        </div>
+                        <div className="flex-1 overflow-y-auto text-sm text-theme-black custom-scrollbar">
+                          {backValue}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               );
             };
-
+            
+            
             const PolicyDetailModal = ({ policy, onClose, onToggle }) => {
               const handleGoToSite = () => {
                 if (policy.policy_url) {
@@ -783,139 +829,40 @@ const MainPage = () => {
                 }
               };
             
-              const renderContent = () => {
-                const isRental = policy.category === '주택공급' && (policy.policy_type === '공공임대' || policy.policy_type === '민간임대');
-                const isSale = policy.category === '주택공급' && (policy.policy_type === '공공분양' || policy.policy_type === '민간분양');
+              // 주택 공급 카테고리 (임대/분양)에 대한 라벨 및 값 정의
+              const isRental = policy.category === '주택공급' && (policy.policy_type === '공공임대' || policy.policy_type === '민간임대');
+              const isSale = policy.category === '주택공급' && (policy.policy_type === '공공분양' || policy.policy_type === '민간분양');
             
-                if (isRental || isSale) {
-                  const details = {
-                    benefitLabel: isRental ? "임대료 수준" : "분양가",
-                    benefitValue: policy.benefit || "상세 내용 참조",
-                    limitLabel: "지원 방식",
-                    limitValue: policy.limit || "제한 없음",
-                    durationLabel: "거주 기간",
-                    durationValue: policy.duration || "-",
-                    priorityLabel: isRental ? "소득 기준" : "조건",
-                    priorityValue: policy.priority || "-",
-                    benefitDetailLabel: isRental ? "지원 한도" : "지원 내용",
-                    benefitDetailValue: policy.benefit_detail || "-",
-                  };
+              let details;
             
-                  return (
-                    <div className="flex h-full flex-col md:flex-row">
-                      {/* Left Pane */}
-                      <div className="w-full md:w-[40%] bg-theme-bonjour/40 p-6 sm:p-8 flex flex-col border-r border-gray-200">
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          <Badge className="bg-theme-livid text-white px-3 py-1 text-sm rounded-md shadow">{policy.category}</Badge>
-                          <Badge variant="outline" className="border-theme-venus/50 text-theme-venus bg-white shadow-sm">{policy.policy_type}</Badge>
-                        </div>
-                        <h2 className="text-3xl font-extrabold text-theme-black leading-tight mb-3 break-keep">{policy.policy_name}</h2>
-                        <p className="text-lg text-theme-venus mb-6">{policy.summary}</p>
-            
-                        <div className="bg-white/60 p-5 rounded-2xl shadow-inner-lg border border-gray-200/80 mb-8">
-                          <div className="flex items-center text-theme-pink mb-4">
-                            <PiggyBank className="w-7 h-7 mr-3" />
-                            <span className="text-lg font-bold">{details.benefitLabel}</span>
-                          </div>
-                          <p className="text-3xl font-bold text-theme-livid">{details.benefitValue}</p>
-                        </div>
-            
-                        <div className="mt-auto space-y-4">
-                           <button 
-                              className={`flex items-center justify-center w-full gap-2 py-3 rounded-xl border-2 transition-all duration-200 ${policy.isFavorite ? "bg-theme-pink border-theme-pink text-white shadow-lg" : "bg-white border-gray-300 text-gray-600 hover:border-theme-pink hover:text-theme-pink"}`}
-                              onClick={() => onToggle(policy.policy_id)} >
-                              <Heart className={`w-5 h-5 ${policy.isFavorite ? "fill-white" : ""}`} />
-                              <span className="font-semibold">{policy.isFavorite ? "관심 정책으로 저장됨" : "관심 정책 추가"}</span>
-                            </button>
-                            <Button onClick={handleGoToSite} size="lg" className="w-full bg-theme-livid hover:bg-theme-livid/90 text-white px-8 text-lg font-semibold shadow-lg hover:shadow-xl transition-all">
-                              신청하러 가기 <ExternalLink className="w-5 h-5 ml-2" />
-                            </Button>
-                        </div>
-                      </div>
-            
-                      {/* Right Pane */}
-                      <div className="w-full md:w-[60%] flex flex-col bg-white">
-                        <div className="flex-1 p-6 sm:p-8 space-y-8">
-                          <section>
-                            <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-3"><FileText className="text-theme-livid"/>정책 소개</h3>
-                            <p className="text-gray-600 text-base leading-relaxed whitespace-pre-wrap bg-gray-50 p-6 rounded-xl border border-gray-100">{policy.desc || "상세 설명이 제공되지 않았습니다."}</p>
-                          </section>
-                          
-                          <section>
-                             <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-3"><Target className="text-theme-pink"/>신청 자격 및 상세 내용</h3>
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                              <DetailItem icon={Calendar} label={details.durationLabel} value={details.durationValue} />
-                              <DetailItem icon={Users} label={details.priorityLabel} value={details.priorityValue} />
-                              <div className="lg:col-span-2">
-                                <DetailItem icon={Wallet} label={details.benefitDetailLabel} value={details.benefitDetailValue} />
-                              </div>
-                            </div>
-                          </section>
-            
-                          {policy.caution && (
-                            <section>
-                              <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-3"><AlertTriangle className="text-yellow-500"/>주의 사항</h3>
-                              <div className="text-gray-700 bg-yellow-50 p-5 rounded-xl border border-yellow-200/80 text-base flex items-start gap-3">
-                                <AlertTriangle className="w-5 h-5 text-yellow-500 mt-1 flex-shrink-0" />
-                                <span>{policy.caution}</span>
-                              </div>
-                            </section>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }
-            
-                // Default template
-                return (
-                  <div className="flex h-full flex-col md:flex-row">
-                    <div className="w-full md:w-[35%] bg-theme-bonjour/30 p-6 sm:p-8 flex flex-col border-r border-gray-100">
-                      <div className="flex flex-wrap gap-2 mb-6">
-                        <Badge className="bg-theme-livid text-white px-3 py-1 text-sm rounded-md shadow-sm">{policy.category || "정책"}</Badge>
-                        <Badge variant="outline" className="border-theme-venus/50 text-theme-venus bg-white">{policy.region}</Badge>
-                      </div>
-                      <h2 className="text-3xl font-extrabold text-theme-black leading-tight mb-6 break-keep">{policy.policy_name}</h2>
-                      <div className="mb-8">
-                        <button className={`flex items-center justify-center w-full gap-2 py-3 rounded-xl border transition-all duration-200 ${policy.isFavorite ? "bg-theme-pink/10 border-theme-pink text-theme-pink" : "bg-white border-gray-200 text-gray-500 hover:border-theme-pink hover:text-theme-pink"}`} onClick={() => onToggle(policy.policy_id)}>
-                          <Heart className={`w-5 h-5 ${policy.isFavorite ? "fill-theme-pink" : ""}`} />
-                          <span className="font-semibold">{policy.isFavorite ? "관심 정책에 저장됨" : "관심 정책으로 저장"}</span>
-                        </button>
-                      </div>
-                      <div className="space-y-4 mt-auto">
-                        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                          <span className="text-sm text-theme-venus font-bold uppercase tracking-wider block mb-2">지원 금액</span>
-                          <p className="text-2xl font-bold text-theme-livid">{policy.max_benefit_amount ? `${(policy.max_benefit_amount / 10000).toLocaleString()}만원` : "상세 내용 참조"}<span className="text-sm font-normal text-gray-500 ml-1">최대</span></p>
-                        </div>
-                        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                           <span className="text-sm text-theme-venus font-bold uppercase tracking-wider block mb-2">대상 주택</span>
-                           <p className="text-lg font-bold text-theme-black">{policy.max_house_price ? `${(policy.max_house_price / 100000000).toFixed(1)}억 이하` : "제한 없음"}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="w-full md:w-[65%] flex flex-col bg-white">
-                      <div className="flex-1 p-6 sm:p-10 space-y-10">
-                        <section>
-                          <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-2"><span className="w-1 h-6 bg-theme-livid rounded-full"></span>어떤 정책인가요?</h3>
-                          <div className="text-gray-600 text-lg leading-8 whitespace-pre-wrap bg-gray-50 p-6 rounded-2xl border border-gray-100">{policy.desc || "상세 설명이 제공되지 않았습니다."}</div>
-                        </section>
-                        <section>
-                           <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-2"><span className="w-1 h-6 bg-theme-pink rounded-full"></span>누가 신청할 수 있나요?</h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <FlippableDetailItem label="거주 지역" value={policy.region} />
-                            <FlippableDetailItem label="정책 유형" value={policy.policy_type} />
-                            <FlippableDetailItem label="최대 대출/지원 기간" value={policy.max_duration_year ? `${policy.max_duration_year}년` : "-"} />
-                            <FlippableDetailItem label="금리 수준" value={policy.min_rate ? `${policy.min_rate}% ~ ${policy.max_rate}%` : "-"} />
-                          </div>
-                        </section>
-                      </div>
-                      <div className="p-6 border-t border-gray-100 flex justify-end gap-3 bg-white/90 backdrop-blur-sm">
-                        <Button onClick={handleGoToSite} size="lg" className="bg-theme-livid hover:bg-theme-livid/90 text-white px-8 text-lg font-semibold shadow-lg hover:shadow-xl transition-all">신청하러 가기 <ExternalLink className="w-5 h-5 ml-2" /></Button>
-                      </div>
-                    </div>
-                  </div>
-                );
+              // 기본값 설정 (향후 다른 카테고리를 위해 확장 가능)
+              details = {
+                benefitLabel: "혜택",
+                benefitValue: policy.benefit || (policy.max_benefit_amount ? `${(policy.max_benefit_amount / 10000).toLocaleString()}만원` : "상세 참조"),
+                // Flippable
+                durationLabel: "거주 기간",
+                durationFront: policy.duration || "-",
+                durationBack: policy.duration_detail,
+                // Flippable
+                priorityLabel: "소득 기준",
+                priorityFront: policy.priority || "-",
+                priorityBack: policy.priority_detail,
+                // Not flippable
+                targetBeneficiaryLabel: "혜택 대상자",
+                targetBeneficiaryValue: policy.limit_detail || "-",
+                // Not flippable
+                benefitDetailLabel: "혜택 상세",
+                benefitDetailValue: policy.benefit_detail || "-",
+                // Not flippable
+                supportMethodLabel: "지원 방식",
+                supportMethodValue: policy.limit || "-",
               };
+            
+              if (isRental || isSale) {
+                details.benefitLabel = isRental ? "임대료 수준" : "분양가";
+                details.priorityLabel = isRental ? "소득 기준" : "신청 조건";
+              }
+            
             
               return (
                 <>
@@ -923,16 +870,85 @@ const MainPage = () => {
                     @keyframes spring-pop { 0% { transform: scale(0.8); opacity: 0; } 50% { transform: scale(1.02); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
                     .animate-spring-pop { animation: spring-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
                     .shadow-inner-lg { box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05); }
-                    .flip-card { perspective: 1000px; cursor: pointer; }
-                    .flip-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; }
-                    .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
-                    .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
-                    .flip-card-back { transform: rotateY(180deg); }
+                    /* Perspective is needed for the 3D effect */
+                    .flip-card { perspective: 1000px; }
                   `}</style>
                   <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300" onClick={onClose}>
                     <div className="bg-white w-full max-w-6xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col relative animate-spring-pop overflow-y-auto custom-scrollbar" onClick={(e) => e.stopPropagation()}>
                       <button onClick={onClose} className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-black transition-colors z-20"><X className="w-6 h-6" /></button>
-                      {renderContent()}
+                      
+                      <div className="flex h-full flex-col md:flex-row">
+                        {/* Left Pane */}
+                        <div className="w-full md:w-[40%] bg-theme-bonjour/40 p-6 sm:p-8 flex flex-col border-r border-gray-200">
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            <Badge className="bg-theme-livid text-white px-3 py-1 text-sm rounded-md shadow">{policy.category}</Badge>
+                            <Badge variant="outline" className="border-theme-venus/50 text-theme-venus bg-white shadow-sm">{policy.policy_type}</Badge>
+                          </div>
+                          <h2 className="text-3xl font-extrabold text-theme-black leading-tight mb-3 break-keep">{policy.policy_name}</h2>
+                          <p className="text-lg text-theme-venus mb-6">{policy.summary}</p>
+              
+                          <div className="bg-white/60 p-5 rounded-2xl shadow-inner-lg border border-gray-200/80 mb-6">
+                            <div className="flex items-center text-theme-pink mb-4">
+                              <PiggyBank className="w-7 h-7 mr-3" />
+                              <span className="text-lg font-bold">{details.benefitLabel}</span>
+                            </div>
+                            <p className="text-3xl font-bold text-theme-livid">{details.benefitValue}</p>
+                          </div>
+            
+                          <div className="bg-white/60 p-5 rounded-2xl shadow-inner-lg border border-gray-200/80 mb-8">
+                            <div className="flex items-center text-theme-livid mb-4">
+                              <Building className="w-7 h-7 mr-3" />
+                              <span className="text-lg font-bold">{details.supportMethodLabel}</span>
+                            </div>
+                            <p className="text-xl font-bold text-theme-black">{details.supportMethodValue}</p>
+                          </div>
+              
+                          <div className="mt-auto grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <Button 
+                                variant="outline"
+                                size="lg"
+                                className="h-auto py-3 text-base border-gray-300 text-gray-600 hover:border-theme-pink hover:text-theme-pink hover:bg-white"
+                                onClick={() => onToggle(policy.policy_id)} >
+                                <Heart className={`w-5 h-5 mr-2 ${policy.isFavorite ? "fill-theme-pink text-theme-pink" : ""}`} />
+                                <span>{policy.isFavorite ? "관심 정책" : "관심 추가"}</span>
+                              </Button>
+                              <Button onClick={handleGoToSite} size="lg" className="h-auto py-3 text-base bg-theme-livid hover:bg-theme-livid/90 text-white shadow-lg hover:shadow-xl transition-all">
+                                신청하러 가기 <ExternalLink className="w-5 h-5 ml-2" />
+                              </Button>
+                          </div>
+                        </div>
+              
+                        {/* Right Pane */}
+                        <div className="w-full md:w-[60%] flex flex-col bg-white">
+                          <div className="flex-1 p-6 sm:p-8 space-y-8">
+                            <section>
+                              <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-3"><Info className="text-theme-livid"/>정책 소개</h3>
+                              <p className="text-gray-600 text-base leading-relaxed whitespace-pre-wrap bg-gray-50 p-6 rounded-xl border border-gray-100">{policy.desc || "상세 설명이 제공되지 않았습니다."}</p>
+                            </section>
+                            
+                            <section>
+                               <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-3"><Target className="text-theme-pink"/>신청 자격 및 상세 내용</h3>
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <FlippableBox icon={Calendar} frontTitle={details.durationLabel} frontValue={details.durationFront} backValue={details.durationBack} />
+                                <FlippableBox icon={Users} frontTitle={details.priorityLabel} frontValue={details.priorityFront} backValue={details.priorityBack} />
+                                <DetailItem icon={Wallet} label={details.targetBeneficiaryLabel} value={details.targetBeneficiaryValue} />
+                                <DetailItem icon={Wallet} label={details.benefitDetailLabel} value={details.benefitDetailValue} />
+                              </div>
+                            </section>
+              
+                            {policy.caution && (
+                              <section>
+                                <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-3"><AlertTriangle className="text-yellow-500"/>주의 사항</h3>
+                                <div className="text-gray-700 bg-yellow-50 p-5 rounded-xl border border-yellow-200/80 text-base flex items-start gap-3">
+                                  <AlertTriangle className="w-5 h-5 text-yellow-500 mt-1 flex-shrink-0" />
+                                  <span>{policy.caution}</span>
+                                </div>
+                              </section>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+            
                     </div>
                   </div>
                 </>
@@ -940,12 +956,12 @@ const MainPage = () => {
             };
             
             const DetailItem = ({ icon: Icon, label, value }) => (
-              <div className="flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white hover:border-theme-venus/30 transition-colors shadow-sm">
+              <div className="flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white hover:border-theme-venus/30 transition-colors shadow-sm h-full">
                 <div className="flex items-center text-sm text-theme-venus mb-2">
                   {Icon && <Icon className="w-4 h-4 mr-2" />}
                   <span>{label}</span>
                 </div>
-                <span className="text-lg font-medium text-theme-black">{value}</span>
+                <span className="text-lg font-medium text-theme-black line-clamp-2">{value}</span>
               </div>
             );
             
