@@ -770,11 +770,11 @@ const MainPage = () => {
             
               return (
                 <div
-                  className={`flip-card group h-full ${canFlip ? 'cursor-pointer' : ''}`}
+                  className={`flip-card group ${canFlip ? 'cursor-pointer' : ''}`}
                   onClick={handleFlip}
                 >
                   <div
-                    className="flip-card-inner relative w-full h-full"
+                    className="flip-card-inner relative w-full"
                     style={{
                       transformStyle: 'preserve-3d',
                       transition: 'transform 0.6s',
@@ -782,7 +782,7 @@ const MainPage = () => {
                     }}
                   >
                     {/* Grid container to stack front and back for auto-height */}
-                    <div className="grid [grid-template-areas:'card'] w-full h-full">
+                    <div className="grid [grid-template-areas:'card'] w-full">
                         {/* Back face (for sizing) */}
                         <div
                             className="[grid-area:card] flip-card-back flex flex-col p-3 rounded-xl border border-gray-200/80 bg-white invisible"
@@ -973,7 +973,7 @@ const MainPage = () => {
             };
             
             const DetailItem = ({ icon: Icon, label, value }) => (
-              <div className="flex flex-col p-3 rounded-xl border border-gray-200/80 bg-white hover:border-theme-venus/30 transition-colors shadow-sm h-full">
+              <div className="flex flex-col p-3 rounded-xl border border-gray-200/80 bg-white hover:border-theme-venus/30 transition-colors shadow-sm">
                 <div className="flex items-center text-sm text-theme-venus mb-1.5">
                   {Icon && <Icon className="w-4 h-4 mr-2" />}
                   <span>{label}</span>
