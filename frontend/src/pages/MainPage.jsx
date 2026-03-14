@@ -815,7 +815,7 @@ const MainPage = () => {
                         }}
                     >
                         <div className="text-xs text-theme-black whitespace-pre-wrap leading-none">
-                          {backValue}
+                          {backValue.replace(/\n\s*\n/g, '\n')}
                         </div>
                     </div>
 
@@ -940,7 +940,7 @@ const MainPage = () => {
                           <div className="flex-1 p-6 sm:p-8 space-y-4">
                             <section>
                               <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-3"><Info className="text-theme-livid"/>정책 소개</h3>
-                              <p className="text-gray-600 text-sm leading-none whitespace-pre-wrap bg-gray-50 p-4 rounded-xl border border-gray-100">{policy.desc || "상세 설명이 제공되지 않았습니다."}</p>
+                              <p className="text-gray-600 text-sm leading-none whitespace-pre-wrap bg-gray-50 p-4 rounded-xl border border-gray-100">{(policy.desc || "상세 설명이 제공되지 않았습니다.").replace(/\n\s*\n/g, '\n')}</p>
                             </section>
                             
                             <section>
@@ -958,7 +958,7 @@ const MainPage = () => {
                                 <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-3"><AlertTriangle className="text-yellow-500"/>주의 사항</h3>
                                 <div className="text-gray-700 bg-yellow-50 p-5 rounded-xl border border-yellow-200/80 text-base flex items-start gap-3">
                                   <AlertTriangle className="w-5 h-5 text-yellow-500 mt-1 flex-shrink-0" />
-                                  <span className="whitespace-pre-wrap">{policy.caution}</span>
+                                  <span className="whitespace-pre-wrap leading-tight">{(policy.caution || '').replace(/\n\s*\n/g, '\n')}</span>
                                 </div>
                               </section>
                             )}
@@ -978,7 +978,7 @@ const MainPage = () => {
                   {Icon && <Icon className="w-4 h-4 mr-2" />}
                   <span>{label}</span>
                 </div>
-                <span className="text-base font-medium text-theme-black whitespace-pre-wrap">{value}</span>
+                <span className="text-base font-medium text-theme-black whitespace-pre-wrap leading-tight">{(value || '').replace(/\n\s*\n/g, '\n')}</span>
               </div>
             );
             
