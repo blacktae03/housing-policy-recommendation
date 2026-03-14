@@ -143,6 +143,19 @@ def init_db():
             file_path = '주택공급정책_출력.csv'
             if os.path.exists(file_path):
                 df = pd.read_csv(file_path).where(pd.notnull(pd.read_csv(file_path)), None)
+                
+                # 데이터 삽입 전, 주요 텍스트 컬럼의 '· '를 실제 줄바꿈 문자로 변경
+                text_columns = [
+                    'desc', 'summary', 'benefit', 'benefit_detail', 'limit', 
+                    'limit_detail', 'duration', 'duration_detail', 'priority', 
+                    'priority_detail', 'caution'
+                ]
+                for col in text_columns:
+                    if col in df.columns:
+                        # 문자열이 아닌 경우를 대비하여 str 접근자 사용 전 타입 체크
+                        if pd.api.types.is_string_dtype(df[col]):
+                            df[col] = df[col].str.replace('· ', '\n· ', regex=False)
+
                 for _, row in df.iterrows():
                     cursor.execute("""
                         INSERT INTO policies_output (policy_id, visit_count, policy_name, category, policy_type, max_house_price, region, max_benefit_amount, min_rate, max_rate, house_size, max_duration_year, policy_url, "desc", summary, benefit, benefit_detail, "limit", limit_detail, duration, duration_detail, priority, priority_detail, caution)
