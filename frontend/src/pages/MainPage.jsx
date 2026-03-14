@@ -770,11 +770,11 @@ const MainPage = () => {
             
               return (
                 <div
-                  className={`flip-card group ${canFlip ? 'cursor-pointer' : ''}`}
+                  className={`flip-card group h-full ${canFlip ? 'cursor-pointer' : ''}`}
                   onClick={handleFlip}
                 >
                   <div
-                    className="flip-card-inner relative w-full"
+                    className="flip-card-inner relative w-full h-full"
                     style={{
                       transformStyle: 'preserve-3d',
                       transition: 'transform 0.6s',
@@ -782,53 +782,53 @@ const MainPage = () => {
                     }}
                   >
                     {/* Grid container to stack front and back for auto-height */}
-                    <div className="grid [grid-template-areas:'card'] w-full">
+                    <div className="grid [grid-template-areas:'card'] w-full h-full">
                         {/* Back face (for sizing) */}
                         <div
-                            className="[grid-area:card] flip-card-back flex flex-col p-3 rounded-xl border border-gray-200/80 bg-white invisible"
+                            className="[grid-area:card] flip-card-back flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white invisible"
                         >
-                            <div className="text-xs text-theme-black whitespace-pre-wrap leading-snug">
+                            <div className="text-sm text-theme-black whitespace-pre-wrap leading-relaxed">
                               {backValue}
                             </div>
                         </div>
 
                         {/* Front face (for sizing) */}
-                        <div className="[grid-area:card] flip-card-front flex flex-col p-3 rounded-xl border border-gray-200/80 bg-white invisible">
-                          <div className="flex items-center text-sm text-theme-venus mb-1.5">
-                            {Icon && <Icon className="w-4 h-4 mr-2" />}
+                        <div className="[grid-area:card] flip-card-front flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white invisible">
+                          <div className="flex items-center text-base text-theme-venus mb-2">
+                            {Icon && <Icon className="w-5 h-5 mr-2" />}
                             <span>{frontTitle}</span>
                             {canFlip && (
                               <RefreshCw className="w-4 h-4 ml-auto text-gray-400 group-hover:text-theme-livid transition-transform duration-300 group-hover:rotate-180" />
                             )}
                           </div>
-                          <span className="text-base font-medium text-theme-black line-clamp-2">{frontValue}</span>
+                          <span className="text-lg font-semibold text-theme-black">{frontValue}</span>
                         </div>
                     </div>
 
 
                     {/* Back face (visible) */}
                     <div
-                        className="absolute top-0 left-0 [grid-area:card] flip-card-back flex flex-col p-3 rounded-xl border border-gray-200/80 bg-white w-full h-full"
+                        className="absolute top-0 left-0 [grid-area:card] flip-card-back flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white w-full h-full"
                         style={{
                             backfaceVisibility: 'hidden',
                             transform: 'rotateY(180deg)',
                         }}
                     >
-                        <div className="text-xs text-theme-black whitespace-pre-wrap leading-snug">
+                        <div className="text-sm text-theme-black whitespace-pre-wrap leading-relaxed">
                           {backValue.replace(/\n\s*\n/g, '\n')}
                         </div>
                     </div>
 
                     {/* Front face (visible) */}
-                    <div className="absolute top-0 left-0 [grid-area:card] flip-card-front flex flex-col p-3 rounded-xl border border-gray-200/80 bg-white hover:border-theme-venus/30 transition-colors shadow-sm w-full h-full" style={{ backfaceVisibility: 'hidden' }}>
-                      <div className="flex items-center text-sm text-theme-venus mb-1.5">
-                        {Icon && <Icon className="w-4 h-4 mr-2" />}
+                    <div className="absolute top-0 left-0 [grid-area:card] flip-card-front flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white hover:border-theme-venus/30 transition-colors shadow-sm w-full h-full" style={{ backfaceVisibility: 'hidden' }}>
+                      <div className="flex items-center text-base text-theme-venus mb-2">
+                        {Icon && <Icon className="w-5 h-5 mr-2" />}
                         <span>{frontTitle}</span>
                         {canFlip && (
                           <RefreshCw className="w-4 h-4 ml-auto text-gray-400 group-hover:text-theme-livid transition-transform duration-300 group-hover:rotate-180" />
                         )}
                       </div>
-                      <span className="text-base font-medium text-theme-black line-clamp-2">{frontValue}</span>
+                      <span className="text-lg font-semibold text-theme-black">{frontValue}</span>
                     </div>
 
                   </div>
@@ -973,12 +973,12 @@ const MainPage = () => {
             };
             
             const DetailItem = ({ icon: Icon, label, value }) => (
-              <div className="flex flex-col p-3 rounded-xl border border-gray-200/80 bg-white hover:border-theme-venus/30 transition-colors shadow-sm">
-                <div className="flex items-center text-sm text-theme-venus mb-1.5">
-                  {Icon && <Icon className="w-4 h-4 mr-2" />}
+              <div className="flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white hover:border-theme-venus/30 transition-colors shadow-sm h-full">
+                <div className="flex items-center text-base text-theme-venus mb-2">
+                  {Icon && <Icon className="w-5 h-5 mr-2" />}
                   <span>{label}</span>
                 </div>
-                <span className="text-base font-medium text-theme-black whitespace-pre-wrap leading-snug">{(value || '').replace(/\n\s*\n/g, '\n')}</span>
+                <span className="text-lg font-semibold text-theme-black whitespace-pre-wrap leading-relaxed">{(value || '').replace(/\n\s*\n/g, '\n')}</span>
               </div>
             );
             
