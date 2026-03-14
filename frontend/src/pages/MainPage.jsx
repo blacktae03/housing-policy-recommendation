@@ -787,7 +787,7 @@ const MainPage = () => {
                         <div
                             className="[grid-area:card] flip-card-back flex flex-col p-4 rounded-xl border border-gray-200/80 bg-white invisible"
                         >
-                            <div className="text-xs text-theme-black whitespace-pre-wrap leading-tight">
+                            <div className="text-xs text-theme-black whitespace-pre-wrap leading-none">
                               {backValue}
                             </div>
                         </div>
@@ -814,7 +814,7 @@ const MainPage = () => {
                             transform: 'rotateY(180deg)',
                         }}
                     >
-                        <div className="text-xs text-theme-black whitespace-pre-wrap leading-tight">
+                        <div className="text-xs text-theme-black whitespace-pre-wrap leading-none">
                           {backValue}
                         </div>
                     </div>
@@ -901,7 +901,7 @@ const MainPage = () => {
                             <Badge className="bg-theme-livid text-white px-3 py-1 text-sm rounded-md shadow">{policy.category}</Badge>
                             <Badge variant="outline" className="border-theme-venus/50 text-theme-venus bg-white shadow-sm">{policy.policy_type}</Badge>
                           </div>
-                          <h2 className="text-3xl font-extrabold text-theme-black leading-tight mb-3 break-keep">{policy.policy_name}</h2>
+                          <h2 className="text-3xl font-extrabold text-theme-black leading-none mb-3 break-keep">{policy.policy_name}</h2>
                           <p className="text-lg text-theme-venus mb-6">{policy.summary}</p>
               
                           <div className="bg-white/60 p-5 rounded-2xl shadow-inner-lg border border-gray-200/80 mb-6">
@@ -940,7 +940,7 @@ const MainPage = () => {
                           <div className="flex-1 p-6 sm:p-8 space-y-4">
                             <section>
                               <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-3"><Info className="text-theme-livid"/>정책 소개</h3>
-                              <p className="text-gray-600 text-sm leading-tight whitespace-pre-wrap bg-gray-50 p-4 rounded-xl border border-gray-100">{policy.desc || "상세 설명이 제공되지 않았습니다."}</p>
+                              <p className="text-gray-600 text-sm leading-none whitespace-pre-wrap bg-gray-50 p-4 rounded-xl border border-gray-100">{policy.desc || "상세 설명이 제공되지 않았습니다."}</p>
                             </section>
                             
                             <section>
