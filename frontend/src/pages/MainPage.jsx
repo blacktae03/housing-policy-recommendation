@@ -789,12 +789,11 @@ const MainPage = () => {
                         >
                             <div className="flex items-center text-sm text-theme-venus mb-2">
                                {Icon && <Icon className="w-4 h-4 mr-2" />}
-                               <span>{frontTitle}</span>
                                {canFlip && (
                                 <RefreshCw className="w-4 h-4 ml-auto text-gray-400" />
                                )}
                             </div>
-                            <div className="text-sm text-theme-black whitespace-pre-wrap">
+                            <div className="text-xs text-theme-black whitespace-pre-wrap leading-normal">
                               {backValue}
                             </div>
                         </div>
@@ -808,7 +807,7 @@ const MainPage = () => {
                               <RefreshCw className="w-4 h-4 ml-auto text-gray-400 group-hover:text-theme-livid transition-transform duration-300 group-hover:rotate-180" />
                             )}
                           </div>
-                          <span className="text-lg font-medium text-theme-black line-clamp-2">{frontValue}</span>
+                          <span className="text-base font-medium text-theme-black line-clamp-2">{frontValue}</span>
                         </div>
                     </div>
 
@@ -823,12 +822,11 @@ const MainPage = () => {
                     >
                         <div className="flex items-center text-sm text-theme-venus mb-2">
                            {Icon && <Icon className="w-4 h-4 mr-2" />}
-                           <span>{frontTitle}</span>
                            {canFlip && (
                             <RefreshCw className="w-4 h-4 ml-auto text-gray-400" />
                            )}
                         </div>
-                        <div className="text-sm text-theme-black whitespace-pre-wrap">
+                        <div className="text-xs text-theme-black whitespace-pre-wrap leading-normal">
                           {backValue}
                         </div>
                     </div>
@@ -842,7 +840,7 @@ const MainPage = () => {
                           <RefreshCw className="w-4 h-4 ml-auto text-gray-400 group-hover:text-theme-livid transition-transform duration-300 group-hover:rotate-180" />
                         )}
                       </div>
-                      <span className="text-lg font-medium text-theme-black line-clamp-2">{frontValue}</span>
+                      <span className="text-base font-medium text-theme-black line-clamp-2">{frontValue}</span>
                     </div>
 
                   </div>
@@ -951,10 +949,10 @@ const MainPage = () => {
               
                         {/* Right Pane */}
                         <div className="w-full md:w-[60%] flex flex-col bg-white">
-                          <div className="flex-1 p-6 sm:p-8 space-y-8">
+                          <div className="flex-1 p-6 sm:p-8 space-y-4">
                             <section>
                               <h3 className="text-xl font-bold text-theme-black mb-4 flex items-center gap-3"><Info className="text-theme-livid"/>정책 소개</h3>
-                              <p className="text-gray-600 text-base leading-relaxed whitespace-pre-wrap bg-gray-50 p-6 rounded-xl border border-gray-100">{policy.desc || "상세 설명이 제공되지 않았습니다."}</p>
+                              <p className="text-gray-600 text-sm leading-normal whitespace-pre-wrap bg-gray-50 p-4 rounded-xl border border-gray-100">{policy.desc || "상세 설명이 제공되지 않았습니다."}</p>
                             </section>
                             
                             <section>
@@ -992,7 +990,7 @@ const MainPage = () => {
                   {Icon && <Icon className="w-4 h-4 mr-2" />}
                   <span>{label}</span>
                 </div>
-                <span className="text-lg font-medium text-theme-black whitespace-pre-wrap">{value}</span>
+                <span className="text-base font-medium text-theme-black whitespace-pre-wrap">{value}</span>
               </div>
             );
             
