@@ -3,6 +3,9 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from requests import Session
 from starlette.middleware.sessions import SessionMiddleware # 세션 관리 도구
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 import database as db
 from database import init_db
 from pydantic import BaseModel, Field
@@ -24,7 +27,15 @@ load_dotenv()
 #     print(f"DB 초기화 실패로 서버를 시작할 수 없습니다: {e}")
 #     sys.exit(1) # 필요하면 주석 해제 (에러나면 아예 서버 안 켜지게 함)
 
-app = FastAPI()
+# --- CSRF Protection End ---
+
+# 'ENVIRONMENT' 환경 변수를 읽어옴 (기본값은 'development')
+IS_PRODUCTION = os.getenv("ENVIRONMENT") == "production"
+
+app = FastAPI(dependencies=[Depends(csrf_verifier)])
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 router = APIRouter(prefix="/api")
 
@@ -44,9 +55,9 @@ app.add_middleware(
 
 app.add_middleware(
     SessionMiddleware,
-    secret_key="diunfansid33482nd9@#Nbd1!",
-    https_only=False,      # 로컬은 http니까 False
-    same_site="lax"        # lax로 두면 로컬에서도 쿠키 잘 먹습니다
+    secret_key=os.getenv("MIDDLEWARE_KEY"),
+    https_only=IS_PRODUCTION,  # 운영 환경일 때만 True
+    same_site="lax"
 )
 
 
@@ -254,6 +265,7 @@ class ApartInfo(BaseModel):
     apart_name: str
 
 
+
 # 2. [API] 회원가입 엔드포인트
 # 사용 중 260106
 @router.post("/signup")
@@ -314,6 +326,7 @@ def check_my_info(request: Request):
 # async 제거
 # 사용 중 260106
 @router.post("/login")
+@limiter.limit("5/minute")
 def login(login_data: LoginRequest, request: Request):
     # Pydantic(LoginRequest) 덕분에 데이터가 깔끔하게 들어옵니다.
     input_id = login_data.username
@@ -324,16 +337,27 @@ def login(login_data: LoginRequest, request: Request):
     
     if user_result:
         # ★ 로그인 성공! 세션(쿠키)에 정보 저장
-        # request.session 딕셔너리에 넣으면 알아서 암호화되어 사용자에게 전달됩니다.
         request.session['user_id'] = user_result['user_id']
         request.session['nickname'] = user_result['nickname']
         request.session['has_info'] = user_result['has_info']
         
-        return {
+        response_data = {
             "message": "로그인 성공!",
             "has_info": user_result['has_info'], # 정보 입력 여부
-            # "user_id": user_result['user_id']
         }
+        
+        # CSRF 토큰을 생성하고 쿠키에 저장
+        response = JSONResponse(content=response_data)
+        csrf_token = secrets.token_hex(16)
+        response.set_cookie(
+            key="csrf_token",
+            value=csrf_token,
+            httponly=False,       # JavaScript가 읽을 수 있어야 함
+            samesite="lax",
+            path="/",
+            secure=IS_PRODUCTION  # 운영 환경에서는 True로 변경 (HTTPS)
+        )
+        return response
     else:
         # 로그인 실패 시 401 에러 전송
         raise HTTPException(status_code=401, detail="아이디 또는 비밀번호가 틀렸습니다.")
@@ -481,7 +505,7 @@ def get_recommended_policies_with_detail(request: Request, apart_info: ApartInfo
     # print(apart_list4)
 
     apart_amounts_mean = [np.mean(amounts) for amounts in apart_list4.values()]
-    apart_amounts_min = min(apart_amounts_mean) * 10000 # 단위(만)
+    apart_amounts_min = min(apart_amounts_mean) # 단위(만)
     # print(apart_amounts_mean)
     # print(apart_amounts_min)
     
@@ -573,7 +597,8 @@ def read_policy_detail(policy_id: int):
     return policy
 
 @router.post("/policies/{policy_id}/visit")
-def record_policy_visit(policy_id: int):
+@limiter.limit("30/minute")
+def record_policy_visit(policy_id: int, request: Request):
     """정책 상세 보기 시 호출되어 visit_count를 1 증가시킵니다."""
     success = db.increment_policy_visit_count(policy_id)
     if not success:
@@ -742,6 +767,15 @@ async def naver_callback(code: str, state: str, request: Request):
         # [추가] 예상치 못한 에러가 나도 로그인 페이지로 반송
         return RedirectResponse("https://jipsalddae.co.kr/login?error=server_error")
     
+
+@app.get("/health", status_code=200)
+def health_check():
+    """
+    서버가 실행 중인지 확인하기 위한 Health Check 엔드포인트.
+    로드 밸런서나 모니터링 시스템에서 사용됩니다.
+    """
+    return {"status": "ok"}
+
 app.include_router(router)
 
 if __name__ == "__main__":
