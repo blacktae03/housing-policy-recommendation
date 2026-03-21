@@ -41,5 +41,6 @@ backend/test.py
 !README.md
 
 *.png
+!logoNoFont.png
 
 *.pages
