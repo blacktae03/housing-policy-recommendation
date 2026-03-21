@@ -27,10 +27,18 @@ load_dotenv()
 #     print(f"DB 초기화 실패로 서버를 시작할 수 없습니다: {e}")
 #     sys.exit(1) # 필요하면 주석 해제 (에러나면 아예 서버 안 켜지게 함)
 
-# --- CSRF Protection End ---
+# --- CSRF Protection ---
+async def csrf_verifier(request: Request):
+    # GET, HEAD, OPTIONS, TRACE 요청은 상태를 변경하지 않으므로 CSRF 검증을 건너뜁니다.
+    if request.method in ["GET", "HEAD", "OPTIONS", "TRACE"]:
+        return
 
-# 'ENVIRONMENT' 환경 변수를 읽어옴 (기본값은 'development')
-IS_PRODUCTION = os.getenv("ENVIRONMENT") == "production"
+    csrf_token_cookie = request.cookies.get("csrf_token")
+    csrf_token_header = request.headers.get("x-csrf-token")
+    
+    if not csrf_token_cookie or not csrf_token_header or csrf_token_cookie != csrf_token_header:
+        raise HTTPException(status_code=403, detail="CSRF token verification failed")
+# --- CSRF Protection End ---
 
 app = FastAPI(dependencies=[Depends(csrf_verifier)])
 limiter = Limiter(key_func=get_remote_address)
@@ -56,8 +64,8 @@ app.add_middleware(
 app.add_middleware(
     SessionMiddleware,
     secret_key=os.getenv("MIDDLEWARE_KEY"),
-    https_only=IS_PRODUCTION,  # 운영 환경일 때만 True
-    same_site="lax"
+    https_only=True,      # 로컬은 http니까 False
+    same_site="lax"        # lax로 두면 로컬에서도 쿠키 잘 먹습니다
 )
 
 
@@ -355,7 +363,7 @@ def login(login_data: LoginRequest, request: Request):
             httponly=False,       # JavaScript가 읽을 수 있어야 함
             samesite="lax",
             path="/",
-            secure=IS_PRODUCTION  # 운영 환경에서는 True로 변경 (HTTPS)
+            secure=False          # 운영 환경에서는 True로 변경 (HTTPS)
         )
         return response
     else:
@@ -767,15 +775,6 @@ async def naver_callback(code: str, state: str, request: Request):
         # [추가] 예상치 못한 에러가 나도 로그인 페이지로 반송
         return RedirectResponse("https://jipsalddae.co.kr/login?error=server_error")
     
-
-@app.get("/health", status_code=200)
-def health_check():
-    """
-    서버가 실행 중인지 확인하기 위한 Health Check 엔드포인트.
-    로드 밸런서나 모니터링 시스템에서 사용됩니다.
-    """
-    return {"status": "ok"}
-
 app.include_router(router)
 
 if __name__ == "__main__":
