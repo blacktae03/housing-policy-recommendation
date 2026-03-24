@@ -363,7 +363,7 @@ def login(login_data: LoginRequest, request: Request):
             httponly=False,       # JavaScript가 읽을 수 있어야 함
             samesite="lax",
             path="/",
-            secure=False          # 운영 환경에서는 True로 변경 (HTTPS)
+            secure=True          # 운영 환경(HTTPS)에서는 True 권장
         )
         return response
     else:
@@ -689,8 +689,18 @@ async def kakao_callback(code: str, request: Request):
         request.session['nickname'] = user_data['nickname']
         request.session['has_info'] = user_data['has_info']
         
-        # 5. 프론트엔드 메인페이지로 리다이렉트
-        return RedirectResponse("https://jipsalddae.co.kr/main")
+        # 5. 프론트엔드 메인페이지로 리다이렉트 (CSRF 토큰 추가)
+        response = RedirectResponse("https://jipsalddae.co.kr/main")
+        csrf_token = secrets.token_hex(16)
+        response.set_cookie(
+            key="csrf_token",
+            value=csrf_token,
+            httponly=False,
+            samesite="lax",
+            path="/",
+            secure=True  # 운영 환경(HTTPS)에서는 True 권장
+        )
+        return response
     
     except Exception as e:
         print(f"카카오 로그인 에러: {e}")
@@ -767,8 +777,18 @@ async def naver_callback(code: str, state: str, request: Request):
         request.session['nickname'] = user_data['nickname']
         request.session['has_info'] = user_data['has_info']
         
-        # 5. 메인으로 복귀
-        return RedirectResponse("https://jipsalddae.co.kr/main")
+        # 5. 메인으로 복귀 (CSRF 토큰 추가)
+        response = RedirectResponse("https://jipsalddae.co.kr/main")
+        csrf_token = secrets.token_hex(16)
+        response.set_cookie(
+            key="csrf_token",
+            value=csrf_token,
+            httponly=False,
+            samesite="lax",
+            path="/",
+            secure=True  # 운영 환경(HTTPS)에서는 True 권장
+        )
+        return response
     
     except Exception as e:
         print(f"네이버 로그인 에러: {e}")
